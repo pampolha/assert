@@ -1,0 +1,3 @@
+echo [Husky] running commit message lint...
+npm run commitlint --$1
+echo [Husky] commit message linting done

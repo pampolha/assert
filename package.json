@@ -1,0 +1,28 @@
+{
+  "name": "assert-bot",
+  "version": "1.0.0",
+  "description": "Assert bot dependencies",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "husky",
+    "eslint": "eslint . --fix",
+    "commitlint": "commitlint --edit"
+  },
+  "author": "Gabriel Pampolha",
+  "license": "CC-BY-NC-ND-4.0",
+  "dependencies": {
+    "discord.js": "^14.15.3"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.3.0",
+    "@commitlint/config-conventional": "^19.2.2",
+    "@eslint/js": "^9.7.0",
+    "@types/eslint__js": "^8.42.3",
+    "eslint": "^8.57.0",
+    "husky": "^9.1.1",
+    "typescript": "^5.5.3",
+    "typescript-eslint": "^7.16.1"
+  }
+}
