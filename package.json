@@ -7,13 +7,20 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepare": "husky",
-    "eslint": "eslint . --fix",
+    "build": "tsc",
+    "start": "node --enable-source-maps ./out/index.js",
+    "deploy-commands-global": "node --enable-source-maps ./out/deploy-commands.js",
+    "deploy-commands-debug": "node --enable-source-maps ./out/deploy-commands.js --debug",
+    "clean": "rm -rf out",
+    "lint": "eslint src/ --fix",
+    "check-types": "tsc --noEmit",
     "commitlint": "commitlint --edit"
   },
   "author": "Gabriel Pampolha",
   "license": "CC-BY-NC-ND-4.0",
   "dependencies": {
-    "discord.js": "^14.15.3"
+    "discord.js": "^14.19.3",
+    "dotenv": "^16.5.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.3.0",
