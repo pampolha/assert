@@ -85,6 +85,7 @@ const rest = new REST().setToken(token);
     console.log(
       `Comandos de aplicação (/) recarregados com sucesso: ${data.length} comandos de aplicação (/).`,
     );
+    console.table(data)
   } catch (error) {
     console.error(error);
   }

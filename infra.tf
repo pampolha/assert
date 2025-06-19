@@ -16,9 +16,9 @@ terraform {
 }
 
 resource "aws_iam_role" "lambda_exec" {
-  name               = "lambda_exec_role"
+  name = "lambda_exec_role"
   assume_role_policy = jsonencode({
-    Version   = "2012-10-17"
+    Version = "2012-10-17"
     Statement = [{
       Action    = "sts:AssumeRole"
       Effect    = "Allow"
@@ -36,9 +36,16 @@ resource "aws_lambda_function" "generator" {
   filename         = "assert-generator-payload.zip"
   function_name    = "assert-generator"
   role             = aws_iam_role.lambda_exec.arn
-  handler          = "index.handler"
+  handler          = "out/lambda/generator/src/index.handler"                                                                                                         
   source_code_hash = filebase64sha256("assert-generator-payload.zip")
-  runtime          = "nodejs18.x"
+  runtime          = "nodejs22.x"
+  timeout          = 60                                                                                                                     
+
+  environment {
+    variables = {
+      OPENAI_API_KEY = var.openai_api_key
+    }
+  }
 }
 
 resource "aws_apigatewayv2_api" "http" {
@@ -47,15 +54,15 @@ resource "aws_apigatewayv2_api" "http" {
 }
 
 resource "aws_apigatewayv2_integration" "lambda" {
-  api_id                  = aws_apigatewayv2_api.http.id
-  integration_type        = "AWS_PROXY"
-  integration_uri         = aws_lambda_function.generator.invoke_arn
-  payload_format_version  = "2.0"
+  api_id                 = aws_apigatewayv2_api.http.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.generator.invoke_arn
+  payload_format_version = "2.0"
 }
 
 resource "aws_apigatewayv2_route" "default" {
   api_id    = aws_apigatewayv2_api.http.id
-  route_key = "GET /"
+  route_key = "$default"                                                                                                                   
   target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
 }
 
@@ -73,7 +80,24 @@ resource "aws_lambda_permission" "apigw" {
   source_arn    = "${aws_apigatewayv2_api.http.execution_arn}/*/*"
 }
 
-resource "aws_dynamodb_table" "table" {
-  name         = "assert-single-table"
+resource "aws_dynamodb_table" "basic_table" {
+  name         = "my-basic-dynamodb-table"
   billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "id"
+
+  attribute {
+    name = "id"
+    type = "S"
+  }
+}
+
+variable "openai_api_key" {
+  description = "A chave da API da OpenAI para a função Lambda."
+  type        = string
+  sensitive   = true                                                                                                                                  
+}
+
+output "api_gateway_url" {
+  description = "A URL de invocação do API Gateway."
+  value       = aws_apigatewayv2_stage.default.invoke_url
 }
