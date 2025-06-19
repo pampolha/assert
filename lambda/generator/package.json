@@ -1,0 +1,11 @@
+{
+  "name": "@assert/generator-lambda",
+  "version": "1.0.0",
+  "description": "Lambda function for generating scenarios with OpenAI API",
+  "main": "out/index.js",
+  "type": "module",
+  "private": true,
+  "scripts": { "build": "tsc && npm prune --omit=dev && zip -rX ../../assert-generator-payload.zip . -x \"*node_modules/.bin*\" -x \"*.ts\" -x \"*.map\" -x \"tsconfig.json\" -x \"package-lock.json\"" },
+  "dependencies": { "dotenv": "^16.5.0", "openai": "^5.2.0" },
+  "devDependencies": { "@types/node": "^22.15.30", "typescript": "^5.8.3" }
+}
