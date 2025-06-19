@@ -7,10 +7,10 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepare": "husky",
-    "build": "rm -rf out && tsc",
-    "start": "node --enable-source-maps ./out/index.js",
-    "deploy-commands-global": "node --enable-source-maps ./out/deploy-commands.js",
-    "deploy-commands-debug": "node --enable-source-maps ./out/deploy-commands.js --debug",
+    "build": "rm -rf out/src && tsc",
+    "start": "node --enable-source-maps ./out/src/index.js",
+    "deploy-commands-global": "node --enable-source-maps ./out/src/deployCommands.js",
+    "deploy-commands-debug": "node --enable-source-maps ./out/src/deployCommands.js --debug",
     "lint": "eslint src/ --fix",
     "check-types": "tsc --noEmit",
     "commitlint": "commitlint --edit"
