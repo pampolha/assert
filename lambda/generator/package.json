@@ -2,7 +2,7 @@
   "name": "@assert/generator-lambda",
   "version": "1.0.0",
   "description": "Lambda function for generating scenarios with OpenAI API",
-  "main": "out/index.js",
+  "main": "out/lambda/generator/src/index.js",
   "type": "module",
   "private": true,
   "scripts": { "build": "tsc && npm prune --omit=dev && zip -rX ../../assert-generator-payload.zip . -x \"*node_modules/.bin*\" -x \"*.ts\" -x \"*.map\" -x \"tsconfig.json\" -x \"package-lock.json\"" },
