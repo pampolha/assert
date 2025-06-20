@@ -1,9 +1,15 @@
-import { SlashCommandBuilder } from "discord.js";
-import { CommandInteraction, Collection } from "discord.js";
+import {
+  SlashCommandBuilder,
+  CommandInteraction,
+  Collection,
+  Snowflake,
+} from "discord.js";
+import { SessionData } from "./session.js";
 
 declare module "discord.js" {
   export interface Client {
     commands: Collection<string, BotCommand>;
+    activeSessions: Collection<Snowflake, SessionData>;
   }
 }
 

@@ -1,24 +1,11 @@
 import { REST, Routes, RESTPutAPIApplicationCommandsResult } from "discord.js";
-import dotenv from "dotenv";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import { BotCommand } from "./types/discord-slash-commands.js";
-
-dotenv.config();
-
-const token = process.env.BOT_TOKEN;
-const clientId = process.env.BOT_CLIENT_ID;
-const debugGuildId = process.env.DEBUG_GUILD_ID;
+import { botClientId, botToken, debugGuildId } from "../shared/env.js";
 
 const isDebugDeployment = process.argv.includes("--debug");
-
-if (!token || !clientId) {
-  console.error(
-    "BOT_TOKEN ou BOT_CLIENT_ID não está configurado no arquivo .env.",
-  );
-  process.exit(1);
-}
 
 if (isDebugDeployment && !debugGuildId) {
   console.error(
@@ -54,7 +41,7 @@ async function loadCommands() {
   }
 }
 
-const rest = new REST().setToken(token);
+const rest = new REST().setToken(botToken);
 
 (async () => {
   await loadCommands();
@@ -64,10 +51,10 @@ const rest = new REST().setToken(token);
     let deploymentTarget;
 
     if (isDebugDeployment) {
-      route = Routes.applicationGuildCommands(clientId, debugGuildId!);
+      route = Routes.applicationGuildCommands(botClientId, debugGuildId!);
       deploymentTarget = `guilda de depuração (ID: ${debugGuildId})`;
     } else {
-      route = Routes.applicationCommands(clientId);
+      route = Routes.applicationCommands(botClientId);
       deploymentTarget = "globalmente";
     }
 

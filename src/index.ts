@@ -5,29 +5,20 @@ import {
   GatewayIntentBits,
   Partials,
 } from "discord.js";
-import dotenv from "dotenv";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import { BotCommand } from "./types/discord-slash-commands.js";
-
-dotenv.config();
-
-const token = process.env.BOT_TOKEN;
-const clientId = process.env.BOT_CLIENT_ID;
-
-if (!token || !clientId) {
-  console.error(
-    "BOT_TOKEN ou BOT_CLIENT_ID não está configurado no arquivo .env.",
-  );
-  process.exit(1);
-}
+import { SessionData } from "./types/session.js";
+import axios from "axios";
+import { botToken, generatorApiGatewayUrl } from "../shared/env.js";
 
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMessageTyping,
   ],
   partials: [
     Partials.Channel,
@@ -38,6 +29,7 @@ const client = new Client({
 });
 
 client.commands = new Collection<string, BotCommand>();
+client.activeSessions = new Collection<string, SessionData>();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -100,4 +92,63 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 });
 
-client.login(token);
+client.on(Events.MessageCreate, async (message) => {
+  if (message.author.bot || !generatorApiGatewayUrl) return;
+
+  const session = client.activeSessions.get(message.channel.id);
+  if (!session) return;
+
+  const triggeredNpc =
+    session.scenario.entidades_interativas_nao_jogaveis_ia.find((npc) =>
+      message.content
+        .toLowerCase()
+        .includes('@' + npc.nome_completo_npc.toLowerCase()),
+    );
+
+  if (triggeredNpc) {
+    try {
+      await message.channel.sendTyping();
+
+      const messageHistory = await message.channel.messages.fetch({
+        limit: 50,
+      });
+
+      const conversationHistory = messageHistory
+        .reverse()
+        .map((msg) => `${msg.author.username}: ${msg.content}`)
+        .join("\n");
+
+      const payload = {
+        action: 'generateNpcResponse',
+        conversationHistory,
+        npc: {
+          nome_completo_npc: triggeredNpc.nome_completo_npc,
+          cargo_funcao_npc_e_relacao_com_equipe: triggeredNpc.cargo_funcao_npc_e_relacao_com_equipe,
+          perfil_psicologico_e_historico_npc_narrativa: triggeredNpc.perfil_psicologico_e_historico_npc_narrativa,
+          modus_operandi_comunicacional_npc: triggeredNpc.modus_operandi_comunicacional_npc,
+          gatilho_e_mensagem_de_entrada_em_cena_npc: triggeredNpc.gatilho_e_mensagem_de_entrada_em_cena_npc,
+          prompt_diretriz_para_ia_roleplay_npc: triggeredNpc.prompt_diretriz_para_ia_roleplay_npc,
+        },
+      };
+
+      const response = await axios.post<{ npcResponse: string }>(
+        generatorApiGatewayUrl,
+        payload,
+      );
+
+      //debug
+      console.log({npcresponse: response.data})
+
+      if (response.data && response.data.npcResponse) {
+        await message.channel.send(response.data.npcResponse);
+      }
+    } catch (error) {
+      console.error("Erro ao lidar com a interação do NPC:", error);
+      await message.channel.send(
+        "Ocorreu um erro ao processar a resposta do NPC.",
+      );
+    }
+  }
+});
+
+client.login(botToken);

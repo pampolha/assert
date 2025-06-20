@@ -6,12 +6,9 @@ import {
 } from "discord.js";
 import { BotCommand } from "../types/discord-slash-commands.js";
 import axios from "axios";
-import dotenv from "dotenv";
 import { Scenario } from "../../shared/schemas.js";
-
-dotenv.config();
-
-const apiGatewayUrl = process.env.API_GATEWAY_URL;
+import { SessionData } from "../types/session.js";
+import { generatorApiGatewayUrl } from "../../shared/env.js";
 
 function formatScenarioData(scenario: Scenario): string {
   let formattedText = `## 📜 Cenário Gerado: ${scenario.titulo_cenario}\n\n`;
@@ -144,7 +141,7 @@ const command: BotCommand = {
       return;
     }
 
-    if (!apiGatewayUrl) {
+    if (!generatorApiGatewayUrl) {
       await interaction.reply({
         content:
           "A URL do API Gateway não está configurada. Por favor, contate um administrador.",
@@ -157,7 +154,9 @@ const command: BotCommand = {
 
     let scenarioData: Scenario;
     try {
-      const response = await axios.post<Scenario>(apiGatewayUrl);
+      const response = await axios.post<Scenario>(generatorApiGatewayUrl, {
+        action: "generateScenario",
+      });
       if (response.status === 200 && response.data) {
         scenarioData = response.data;
       } else {
@@ -277,6 +276,16 @@ const command: BotCommand = {
         `Bem-vindo(a) à sua sessão de simulação, ${interaction.user}!\n\n` +
           `Este é o canal de texto privado para a sua simulação. O canal de voz é ${voiceChannel}.`,
       );
+
+      const sessionData: SessionData = {
+        scenario: scenarioData,
+        textChannelId: textChannel.id,
+        voiceChannelId: voiceChannel.id,
+        categoryId: category.id,
+        ownerId: interaction.user.id,
+      };
+
+      interaction.client.activeSessions.set(textChannel.id, sessionData);
 
       const fullScenarioText = formatScenarioData(scenarioData);
       await sendLongMessage(textChannel, fullScenarioText);
