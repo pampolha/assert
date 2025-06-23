@@ -32,6 +32,34 @@ resource "aws_iam_role_policy_attachment" "lambda_logs" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+resource "aws_iam_policy" "dynamodb_policy" {
+  name        = "dynamodb_policy"
+  description = "Policy for Lambda to access DynamoDB table"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:Query",
+          "dynamodb:Scan"
+        ]
+        Effect   = "Allow"
+        Resource = aws_dynamodb_table.assert_table.arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "dynamodb_attachment" {
+  role       = aws_iam_role.lambda_exec.name
+  policy_arn = aws_iam_policy.dynamodb_policy.arn
+}
+
 resource "aws_lambda_function" "generator" {
   filename         = "assert-generator-payload.zip"
   function_name    = "assert-generator"
@@ -80,14 +108,31 @@ resource "aws_lambda_permission" "apigw" {
   source_arn    = "${aws_apigatewayv2_api.http.execution_arn}/*/*"
 }
 
-resource "aws_dynamodb_table" "basic_table" {
-  name         = "my-basic-dynamodb-table"
+resource "aws_dynamodb_table" "assert_table" {
+  name         = "assert-table"
   billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "id"
+  hash_key     = "PK"
+  range_key    = "SK"
 
   attribute {
-    name = "id"
+    name = "PK"
     type = "S"
+  }
+
+  attribute {
+    name = "SK"
+    type = "S"
+  }
+
+  attribute {
+    name = "type"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "type-index"
+    hash_key        = "type"
+    projection_type = "ALL"
   }
 }
 

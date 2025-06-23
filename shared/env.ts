@@ -14,5 +14,8 @@ const botClientId = getOrThrow("BOT_CLIENT_ID");
 const generatorApiGatewayUrl = getOrThrow("API_GATEWAY_URL");
 const openAiKey = getOrThrow("OPENAI_API_KEY");
 const debugGuildId = getOrThrow("DEBUG_GUILD_ID");
+const awsSecretKey = getOrThrow("AWS_SECRET_ACCESS_KEY");
+const awsAccessKey = getOrThrow("AWS_ACCESS_KEY_ID");
+const awsRegion = getOrThrow("AWS_REGION");
 
-export { openAiKey, botClientId, botToken, debugGuildId, generatorApiGatewayUrl };
+export { openAiKey, botClientId, botToken, debugGuildId, generatorApiGatewayUrl, awsAccessKey, awsSecretKey, awsRegion };
