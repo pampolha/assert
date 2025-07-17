@@ -1,7 +1,16 @@
 import { OpenAI } from "openai";
 import generatorPrompt from "./prompts/generator.js";
 import { Scenario, scenarioJSONSchema } from "../../../shared/schemas.js";
-import { openAiKey } from "../../../shared/env.js";
+
+const getOrThrow = (key: string): string => {
+  const attemptedValue = process.env[key];
+  if (!attemptedValue) {
+    throw new Error(`Could not get environment variable ${key}`);
+  }
+  return attemptedValue;
+};
+
+const openAiKey = getOrThrow("OPENAI_API_KEY");
 
 const openai = new OpenAI({
   apiKey: openAiKey,
