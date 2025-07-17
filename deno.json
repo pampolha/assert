@@ -1,0 +1,21 @@
+{
+  "name": "assert-bot",
+  "version": "1.0.0",
+  "description": "Assert bot dependencies",
+  "exports": "./src/index.ts",
+  "tasks": {
+    "test": "deno test --allow-all",
+    "build": "deno check src/index.ts src/deployCommands.ts",
+    "start": "deno run --allow-all --enable-source-maps src/index.ts",
+    "deploy-commands-global": "deno run --allow-all --enable-source-maps src/deployCommands.ts",
+    "deploy-commands-debug": "deno run --allow-all --enable-source-maps src/deployCommands.ts --debug",
+    "lint": "deno lint src/",
+    "dev": "deno run --watch --allow-all src/index.ts"
+  },
+  "imports": {
+    "axios": "https://esm.sh/axios@1.9.0",
+    "discord.js": "https://esm.sh/discord.js@14.19.3",
+    "dotenv": "https://esm.sh/dotenv@16.5.0"
+  },
+  "license": "CC-BY-NC-ND-4.0"
+}

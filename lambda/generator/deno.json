@@ -1,0 +1,15 @@
+{
+  "name": "@assert/generator-lambda",
+  "version": "1.0.0",
+  "description": "Lambda function for generating scenarios with OpenAI API",
+  "exports": "./src/index.ts",
+  "tasks": {
+    "build": "deno bundle --output=generator.js src/index.ts && zip -rX ../../assert-generator-payload.zip . -x \"*node_modules/.bin*\" -x \"*.ts\" -x \"*.map\" -x \"deno.lock\" && rm generator.js",
+    "dev": "deno run --allow-all --watch src/index.ts",
+    "check": "deno check src/index.ts"
+  },
+  "imports": {
+    "dotenv": "https://esm.sh/dotenv@16.5.0",
+    "openai": "https://esm.sh/openai@5.2.0"
+  }
+}
