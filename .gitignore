@@ -2,6 +2,7 @@
 *.env
 .terraform
 terraform.tfstate*
+*.zip
 .tfvars
 
 # Logs

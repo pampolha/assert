@@ -1,3 +1,0 @@
-echo [Husky] running code lint...
-npm run lint --silent
-echo [Husky] code linting done
