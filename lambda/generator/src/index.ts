@@ -1,6 +1,11 @@
 import { OpenAI } from "openai";
-import generatorPrompt from "./prompts/generator.js";
-import { Scenario, scenarioJSONSchema } from "../../../shared/schemas.js";
+import generatorPrompt from "./prompts/generator.ts";
+import { type Scenario, scenarioJSONSchema } from "../../../shared/schemas.ts";
+import dotenv from "dotenv";
+import process from "node:process";
+import path from "node:path";
+
+dotenv.config({ path: path.resolve(process.cwd(), "../../.env") });
 
 const getOrThrow = (key: string): string => {
   const attemptedValue = process.env[key];
@@ -16,6 +21,7 @@ const openai = new OpenAI({
   apiKey: openAiKey,
 });
 
+// deno-lint-ignore no-explicit-any
 export const handler = async (event: any) => {
   try {
     console.log("Evento recebido:", JSON.stringify(event));

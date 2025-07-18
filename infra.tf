@@ -64,7 +64,7 @@ resource "aws_lambda_function" "generator" {
   filename         = "assert-generator-payload.zip"
   function_name    = "assert-generator"
   role             = aws_iam_role.lambda_exec.arn
-  handler          = "out/lambda/generator/src/index.handler"                                                                                                         
+  handler          = "index.handler"                                                                                                         
   source_code_hash = filebase64sha256("assert-generator-payload.zip")
   runtime          = "nodejs22.x"
   timeout          = 60                                                                                                                     
