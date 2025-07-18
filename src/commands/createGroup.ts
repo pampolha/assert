@@ -2,13 +2,13 @@ import {
   ChannelType,
   PermissionFlagsBits,
   SlashCommandBuilder,
-  TextChannel,
+  type TextChannel,
 } from "discord.js";
-import { BotCommand } from "../types/discord-slash-commands.js";
+import type { BotCommand } from "../types/discord-slash-commands.ts";
 import axios from "axios";
-import { Scenario } from "../../shared/schemas.js";
-import { SessionData } from "../types/session.js";
-import { generatorApiGatewayUrl } from "../../shared/env.js";
+import type { Scenario } from "../../shared/schemas.ts";
+import type { SessionData } from "../types/session.ts";
+import { generatorApiGatewayUrl } from "../../shared/env.ts";
 
 function formatScenarioData(scenario: Scenario): string {
   let formattedText = `## 📜 Cenário Gerado: ${scenario.titulo_cenario}\n\n`;

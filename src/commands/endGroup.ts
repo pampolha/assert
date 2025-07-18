@@ -5,7 +5,7 @@ import {
   SlashCommandBuilder,
   ComponentType,
 } from "discord.js";
-import { BotCommand } from "../types/discord-slash-commands.js";
+import type { BotCommand } from "../types/discord-slash-commands.ts";
 
 const command: BotCommand = {
   data: new SlashCommandBuilder()
