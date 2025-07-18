@@ -6,9 +6,9 @@
   "tasks": {
     "test": "deno test --allow-all",
     "build": "deno check src/index.ts src/deployCommands.ts",
-    "start": "deno run --allow-all --enable-source-maps src/index.ts",
-    "deploy-commands-global": "deno run --allow-all --enable-source-maps src/deployCommands.ts",
-    "deploy-commands-debug": "deno run --allow-all --enable-source-maps src/deployCommands.ts --debug",
+    "start": "deno run --allow-all src/index.ts",
+    "deploy-commands-global": "deno run --allow-all src/deployCommands.ts",
+    "deploy-commands-debug": "deno run --allow-all src/deployCommands.ts --debug",
     "lint": "deno lint src/",
     "dev": "deno run --watch --allow-all src/index.ts"
   },
