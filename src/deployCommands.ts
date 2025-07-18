@@ -1,9 +1,14 @@
-import { REST, Routes, RESTPutAPIApplicationCommandsResult } from "discord.js";
+import {
+  REST,
+  type RESTPutAPIApplicationCommandsResult,
+  Routes,
+} from "discord.js";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
-import { BotCommand } from "./types/discord-slash-commands.js";
-import { botClientId, botToken, debugGuildId } from "../shared/env.js";
+import type { BotCommand } from "./types/discord-slash-commands.ts";
+import { botClientId, botToken, debugGuildId } from "../shared/env.ts";
+import process from "node:process";
 
 const isDebugDeployment = process.argv.includes("--debug");
 
@@ -72,7 +77,7 @@ const rest = new REST().setToken(botToken);
     console.log(
       `Comandos de aplicação (/) recarregados com sucesso: ${data.length} comandos de aplicação (/).`,
     );
-    console.table(data)
+    console.table(data);
   } catch (error) {
     console.error(error);
   }

@@ -7,11 +7,11 @@ import {
 } from "discord.js";
 import path from "path";
 import fs from "fs";
-import { fileURLToPath } from "url";
-import { BotCommand } from "./types/discord-slash-commands.js";
-import { SessionData } from "./types/session.js";
+import { fileURLToPath } from "node:url";
+import type { BotCommand } from "./types/discord-slash-commands.ts";
+import type { SessionData } from "./types/session.ts";
 import axios from "axios";
-import { botToken, generatorApiGatewayUrl } from "../shared/env.js";
+import { botToken, generatorApiGatewayUrl } from "../shared/env.ts";
 
 const client = new Client({
   intents: [
@@ -98,11 +98,11 @@ client.on(Events.MessageCreate, async (message) => {
   const session = client.activeSessions.get(message.channel.id);
   if (!session) return;
 
-  const triggeredNpc =
-    session.scenario.entidades_interativas_nao_jogaveis_ia.find((npc) =>
+  const triggeredNpc = session.scenario.entidades_interativas_nao_jogaveis_ia
+    .find((npc) =>
       message.content
         .toLowerCase()
-        .includes('@' + npc.nome_completo_npc.toLowerCase()),
+        .includes("@" + npc.nome_completo_npc.toLowerCase())
     );
 
   if (triggeredNpc) {
@@ -119,15 +119,20 @@ client.on(Events.MessageCreate, async (message) => {
         .join("\n");
 
       const payload = {
-        action: 'generateNpcResponse',
+        action: "generateNpcResponse",
         conversationHistory,
         npc: {
           nome_completo_npc: triggeredNpc.nome_completo_npc,
-          cargo_funcao_npc_e_relacao_com_equipe: triggeredNpc.cargo_funcao_npc_e_relacao_com_equipe,
-          perfil_psicologico_e_historico_npc_narrativa: triggeredNpc.perfil_psicologico_e_historico_npc_narrativa,
-          modus_operandi_comunicacional_npc: triggeredNpc.modus_operandi_comunicacional_npc,
-          gatilho_e_mensagem_de_entrada_em_cena_npc: triggeredNpc.gatilho_e_mensagem_de_entrada_em_cena_npc,
-          prompt_diretriz_para_ia_roleplay_npc: triggeredNpc.prompt_diretriz_para_ia_roleplay_npc,
+          cargo_funcao_npc_e_relacao_com_equipe:
+            triggeredNpc.cargo_funcao_npc_e_relacao_com_equipe,
+          perfil_psicologico_e_historico_npc_narrativa:
+            triggeredNpc.perfil_psicologico_e_historico_npc_narrativa,
+          modus_operandi_comunicacional_npc:
+            triggeredNpc.modus_operandi_comunicacional_npc,
+          gatilho_e_mensagem_de_entrada_em_cena_npc:
+            triggeredNpc.gatilho_e_mensagem_de_entrada_em_cena_npc,
+          prompt_diretriz_para_ia_roleplay_npc:
+            triggeredNpc.prompt_diretriz_para_ia_roleplay_npc,
         },
       };
 
@@ -137,7 +142,7 @@ client.on(Events.MessageCreate, async (message) => {
       );
 
       //debug
-      console.log({npcresponse: response.data})
+      console.log({ npcresponse: response.data });
 
       if (response.data && response.data.npcResponse) {
         await message.channel.send(response.data.npcResponse);
