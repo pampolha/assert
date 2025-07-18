@@ -4,7 +4,7 @@
   "description": "Lambda function for generating scenarios with OpenAI API",
   "exports": "./src/index.ts",
   "tasks": {
-    "build": "deno bundle src/index.ts -o index.js && zip -X ../../assert-generator-payload.zip index.js package.json && rm index.js",
+    "build": "deno bundle src/index.ts -o index.js && echo '{\"type\": \"module\"}' > package.json && zip -X ../../assert-generator-payload.zip index.js package.json && rm index.js package.json",
     "dev": "deno run --allow-all --watch src/index.ts",
     "check": "deno check src/index.ts"
   },

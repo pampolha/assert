@@ -1,10 +1,10 @@
-import {
-  SlashCommandBuilder,
-  CommandInteraction,
+import type {
   Collection,
+  CommandInteraction,
+  SlashCommandBuilder,
   Snowflake,
 } from "discord.js";
-import { SessionData } from "./session.js";
+import type { SessionData } from "./session.ts";
 
 declare module "discord.js" {
   export interface Client {
