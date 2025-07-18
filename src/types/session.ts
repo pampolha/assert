@@ -1,5 +1,5 @@
-import { Snowflake } from "discord.js";
-import { Scenario } from "../../shared/schemas.js";
+import type { Snowflake } from "discord.js";
+import type { Scenario } from "../../shared/schemas.ts";
 
 export interface SessionData {
   scenario: Scenario;
