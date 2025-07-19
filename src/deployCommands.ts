@@ -3,9 +3,9 @@ import {
   type RESTPutAPIApplicationCommandsResult,
   Routes,
 } from "discord.js";
-import path from "path";
-import fs from "fs";
-import { fileURLToPath } from "url";
+import path from "node:path";
+import fs from "node:fs";
+import { fileURLToPath } from "node:url";
 import type { BotCommand } from "./types/discord-slash-commands.ts";
 import { botClientId, botToken, debugGuildId } from "../shared/env.ts";
 import process from "node:process";
@@ -29,7 +29,7 @@ const commandsPath = path.join(__dirname, "commands");
 async function loadCommands() {
   const commandFiles = fs
     .readdirSync(commandsPath)
-    .filter((file) => file.endsWith(".js"));
+    .filter((file) => file.endsWith(".ts"));
 
   for (const file of commandFiles) {
     const filePath = path.join(commandsPath, file);

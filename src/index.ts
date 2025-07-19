@@ -5,8 +5,8 @@ import {
   GatewayIntentBits,
   Partials,
 } from "discord.js";
-import path from "path";
-import fs from "fs";
+import path from "node:path";
+import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import type { BotCommand } from "./types/discord-slash-commands.ts";
 import type { SessionData } from "./types/session.ts";

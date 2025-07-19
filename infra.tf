@@ -80,14 +80,81 @@ resource "aws_lambda_permission" "apigw" {
   source_arn    = "${aws_apigatewayv2_api.http.execution_arn}/*/*"
 }
 
-resource "aws_dynamodb_table" "basic_table" {
-  name         = "my-basic-dynamodb-table"
+resource "aws_dynamodb_table" "single_table" {
+  name         = "assert-single-table"
   billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "id"
+  hash_key     = "PK"
+  range_key    = "SK"
 
   attribute {
-    name = "id"
+    name = "PK"
     type = "S"
+  }
+
+  attribute {
+    name = "SK"
+    type = "S"
+  }
+
+  attribute {
+    name = "GSI1PK"
+    type = "S"
+  }
+
+  attribute {
+    name = "GSI1SK"
+    type = "S"
+  }
+
+  attribute {
+    name = "GSI2PK"
+    type = "S"
+  }
+
+  attribute {
+    name = "GSI2SK"
+    type = "S"
+  }
+
+  attribute {
+    name = "Status"
+    type = "S"
+  }
+
+  attribute {
+    name = "UserID"
+    type = "S"
+  }
+
+  attribute {
+    name = "expiry_date"
+    type = "N"
+  }
+
+  global_secondary_index {
+    name            = "GSI1"
+    hash_key        = "GSI1PK"
+    range_key       = "GSI1SK"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name            = "GSI2"
+    hash_key        = "Status"
+    range_key       = "GSI1SK"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name            = "GSI3"
+    hash_key        = "UserID"
+    range_key       = "GSI2SK"
+    projection_type = "ALL"
+  }
+
+  ttl {
+    attribute_name = "expiry_date"
+    enabled        = true
   }
 }
 
