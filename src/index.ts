@@ -39,7 +39,7 @@ const commandsPath = path.join(__dirname, "commands");
 async function loadCommands() {
   const commandFiles = fs
     .readdirSync(commandsPath)
-    .filter((file) => file.endsWith(".js"));
+    .filter((file) => file.endsWith(".ts"));
 
   for (const file of commandFiles) {
     const filePath = path.join(commandsPath, file);
