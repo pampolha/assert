@@ -43,7 +43,7 @@ resource "aws_lambda_function" "generator" {
 
   environment {
     variables = {
-      OPENAI_API_KEY = var.openai_api_key
+      OPENROUTER_API_KEY = var.openrouter_api_key
     }
   }
 }
@@ -158,8 +158,8 @@ resource "aws_dynamodb_table" "single_table" {
   }
 }
 
-variable "openai_api_key" {
-  description = "A chave da API da OpenAI para a função Lambda."
+variable "openrouter_api_key" {
+  description = "A chave da API do roteador OpenRouter para a função Lambda."
   type        = string
   sensitive   = true                                                                                                                                  
 }
