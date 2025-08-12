@@ -1,12 +1,14 @@
 {
   "version": "5",
   "specifiers": {
+    "npm:@aws-sdk/client-dynamodb@*": "3.848.0",
+    "npm:@aws-sdk/client-dynamodb@^3.848.0": "3.848.0",
     "npm:@types/node@*": "22.15.15",
     "npm:axios@^1.10.0": "1.10.0",
     "npm:discord.js@^14.21.0": "14.21.0",
     "npm:dotenv@^17.2.0": "17.2.0",
-    "npm:dynamoose@*": "4.0.4_@aws-sdk+client-dynamodb@3.848.0",
-    "npm:dynamoose@^4.0.4": "4.0.4_@aws-sdk+client-dynamodb@3.848.0",
+    "npm:dynamodb-onetable@*": "2.7.7_@aws-sdk+client-dynamodb@3.848.0",
+    "npm:dynamodb-onetable@^2.7.7": "2.7.7_@aws-sdk+client-dynamodb@3.848.0",
     "npm:zlib-sync@*": "0.1.10"
   },
   "npm": {
@@ -902,6 +904,13 @@
         "delayed-stream"
       ]
     },
+    "custom-metrics@1.0.5_@aws-sdk+client-dynamodb@3.848.0": {
+      "integrity": "sha512-5LOTCd5nCE95HQS3rSHm9yAcnLGdjlbWpvFafdAd9oAnTeVkfQcN8rZgizSZJD9z+5LF5VYt6moeuvbyHQshIQ==",
+      "dependencies": [
+        "@aws-sdk/client-dynamodb",
+        "@aws-sdk/util-dynamodb"
+      ]
+    },
     "delayed-stream@1.0.0": {
       "integrity": "sha512-ZySD7Nf91aLB0RxL4KGrKHBXl7Eds1DAmEdcoVawXnLD7SDhpNgtuII2aAkg7a7QS41jxPSZ17p4VdGnMHk3MQ=="
     },
@@ -937,19 +946,12 @@
         "gopd"
       ]
     },
-    "dynamoose-utils@4.0.4": {
-      "integrity": "sha512-iRKIAIJvJcqEi7huT6p/yxARwvV/aqpYh27YZsPEEv9+ynbvmez2ySl+khOrLPYmkwIOuxPIPAJyKCncfBnI9A==",
-      "dependencies": [
-        "js-object-utilities"
-      ]
-    },
-    "dynamoose@4.0.4_@aws-sdk+client-dynamodb@3.848.0": {
-      "integrity": "sha512-J4O5QkQKpi+JTHOggLliVFwz97CCYqWmgrSAoJP1gZSnVhdHk7W6awEddMGvZN4zGnKXn837+3tQS2JDfCmm6g==",
+    "dynamodb-onetable@2.7.7_@aws-sdk+client-dynamodb@3.848.0": {
+      "integrity": "sha512-yugIXk9XO1mnwKyqIuPnIQMg0uXaE6p/dNjEcxVePPnwjaAL+iHxnJ33dv8a//Q1Tug/qbeduaZDpUYjlTyKLw==",
       "dependencies": [
         "@aws-sdk/client-dynamodb",
         "@aws-sdk/util-dynamodb",
-        "dynamoose-utils",
-        "js-object-utilities"
+        "custom-metrics"
       ]
     },
     "es-define-property@1.0.1": {
@@ -1262,10 +1264,11 @@
   },
   "workspace": {
     "dependencies": [
+      "npm:@aws-sdk/client-dynamodb@^3.848.0",
       "npm:axios@^1.10.0",
       "npm:discord.js@^14.21.0",
       "npm:dotenv@^17.2.0",
-      "npm:dynamoose@^4.0.4"
+      "npm:dynamodb-onetable@^2.7.7"
     ]
   }
 }
