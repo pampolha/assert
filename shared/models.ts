@@ -38,6 +38,7 @@ const schema = {
           required: true,
           schema: {
             id: { type: String, required: true },
+            tag: { type: String, required: true },
             role: { type: String, enum: ["owner", "member"], required: true },
           },
         },

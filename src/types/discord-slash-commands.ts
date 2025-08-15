@@ -2,14 +2,11 @@ import type {
   Collection,
   CommandInteraction,
   SlashCommandBuilder,
-  Snowflake,
 } from "discord.js";
-import type { SessionData } from "./session.ts";
 
 declare module "discord.js" {
   export interface Client {
     commands: Collection<string, BotCommand>;
-    activeSessions: Collection<Snowflake, SessionData>;
   }
 }
 

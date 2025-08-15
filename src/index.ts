@@ -9,9 +9,13 @@ import path from "node:path";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import type { BotCommand } from "./types/discord-slash-commands.ts";
-import type { SessionData } from "./types/session.ts";
 import axios from "axios";
 import { botToken, generatorApiGatewayUrl } from "../shared/env.ts";
+import {
+  type ScenarioEntity,
+  ScenarioModel,
+  SessionModel,
+} from "../shared/models.ts";
 
 const client = new Client({
   intents: [
@@ -29,7 +33,6 @@ const client = new Client({
 });
 
 client.commands = new Collection<string, BotCommand>();
-client.activeSessions = new Collection<string, SessionData>();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,21 +40,26 @@ const __dirname = path.dirname(__filename);
 const commandsPath = path.join(__dirname, "commands");
 
 async function loadCommands() {
-  const commandFiles = fs
-    .readdirSync(commandsPath)
-    .filter((file) => file.endsWith(".ts"));
+  const commandDirs = fs
+    .readdirSync(commandsPath, { withFileTypes: true })
+    .filter((dirent) => dirent.isDirectory())
+    .map((dirent) => dirent.name);
 
-  for (const file of commandFiles) {
-    const filePath = path.join(commandsPath, file);
+  for (const dir of commandDirs) {
+    const indexPath = path.join(commandsPath, dir, "index.ts");
 
-    const command: BotCommand = (await import(filePath)).default;
+    if (fs.existsSync(indexPath)) {
+      const command: BotCommand = (await import(indexPath)).default;
 
-    if ("data" in command && "execute" in command) {
-      client.commands.set(command.data.name, command);
+      if ("data" in command && "execute" in command) {
+        client.commands.set(command.data.name, command);
+      } else {
+        console.warn(
+          `Command at ${indexPath} does not have "data" and/or "execute" properties.`,
+        );
+      }
     } else {
-      console.warn(
-        `[AVISO] O comando em ${filePath} está faltando uma propriedade "data" ou "execute" obrigatória.`,
-      );
+      console.warn(`Command at ${indexPath} does not have an "index.ts" file`);
     }
   }
 }
@@ -95,10 +103,33 @@ client.on(Events.InteractionCreate, async (interaction) => {
 client.on(Events.MessageCreate, async (message) => {
   if (message.author.bot || !generatorApiGatewayUrl) return;
 
-  const session = client.activeSessions.get(message.channel.id);
-  if (!session) return;
+  const formingSessions = await SessionModel.find({
+    status: "ACTIVE",
+  }, { index: "gs1" });
 
-  const triggeredNpc = session.scenario.entidades_interativas_nao_jogaveis_ia
+  let sessionData = null;
+  let scenarioData = null;
+
+  for (const session of formingSessions) {
+    if (session.participants.some((part) => part.id === message.author.id)) {
+      sessionData = session;
+      break;
+    }
+  }
+
+  if (sessionData) {
+    try {
+      scenarioData = await ScenarioModel.get({
+        scenarioId: sessionData.scenarioId,
+      });
+    } catch (error) {
+      console.error("Failed to get scenario data:", error);
+    }
+  }
+
+  if (!scenarioData) return;
+
+  const triggeredNpc = scenarioData.entidades_interativas_nao_jogaveis_ia
     .find((npc) =>
       message.content
         .toLowerCase()
@@ -133,16 +164,13 @@ client.on(Events.MessageCreate, async (message) => {
             triggeredNpc.gatilho_e_mensagem_de_entrada_em_cena_npc,
           prompt_diretriz_para_ia_roleplay_npc:
             triggeredNpc.prompt_diretriz_para_ia_roleplay_npc,
-        },
+        } as ScenarioEntity["entidades_interativas_nao_jogaveis_ia"][0],
       };
 
       const response = await axios.post<{ npcResponse: string }>(
         generatorApiGatewayUrl,
         payload,
       );
-
-      //debug
-      console.log({ npcresponse: response.data });
 
       if (response.data && response.data.npcResponse) {
         await message.channel.send(response.data.npcResponse);
