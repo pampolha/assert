@@ -100,88 +100,89 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 });
 
-client.on(Events.MessageCreate, async (message) => {
-  if (message.author.bot || !generatorApiGatewayUrl) return;
+// todo: refactor
+// client.on(Events.MessageCreate, async (message) => {
+//   if (message.author.bot || !generatorApiGatewayUrl) return;
 
-  const formingSessions = await SessionModel.find({
-    status: "ACTIVE",
-  }, { index: "gs1" });
+//   const formingSessions = await SessionModel.find({
+//     status: "ACTIVE",
+//   }, { index: "gs1" });
 
-  let sessionData = null;
-  let scenarioData = null;
+//   let sessionData = null;
+//   let scenarioData = null;
 
-  for (const session of formingSessions) {
-    if (session.participants.some((part) => part.id === message.author.id)) {
-      sessionData = session;
-      break;
-    }
-  }
+//   for (const session of formingSessions) {
+//     if (session.participants.some((part) => part.id === message.author.id)) {
+//       sessionData = session;
+//       break;
+//     }
+//   }
 
-  if (sessionData) {
-    try {
-      scenarioData = await ScenarioModel.get({
-        scenarioId: sessionData.scenarioId,
-      });
-    } catch (error) {
-      console.error("Failed to get scenario data:", error);
-    }
-  }
+//   if (sessionData) {
+//     try {
+//       scenarioData = await ScenarioModel.get({
+//         scenarioId: sessionData.scenarioId,
+//       });
+//     } catch (error) {
+//       console.error("Failed to get scenario data:", error);
+//     }
+//   }
 
-  if (!scenarioData) return;
+//   if (!scenarioData) return;
 
-  const triggeredNpc = scenarioData.entidades_interativas_nao_jogaveis_ia
-    .find((npc) =>
-      message.content
-        .toLowerCase()
-        .includes("@" + npc.nome_completo_npc.toLowerCase())
-    );
+//   const triggeredNpc = scenarioData.entidades_interativas_nao_jogaveis_ia
+//     .find((npc) =>
+//       message.content
+//         .toLowerCase()
+//         .includes("@" + npc.nome_completo_npc.toLowerCase())
+//     );
 
-  if (triggeredNpc) {
-    try {
-      await message.channel.sendTyping();
+//   if (triggeredNpc) {
+//     try {
+//       await message.channel.sendTyping();
 
-      const messageHistory = await message.channel.messages.fetch({
-        limit: 50,
-      });
+//       const messageHistory = await message.channel.messages.fetch({
+//         limit: 50,
+//       });
 
-      const conversationHistory = messageHistory
-        .reverse()
-        .map((msg) => `${msg.author.username}: ${msg.content}`)
-        .join("\n");
+//       const conversationHistory = messageHistory
+//         .reverse()
+//         .map((msg) => `${msg.author.username}: ${msg.content}`)
+//         .join("\n");
 
-      const payload = {
-        action: "generateNpcResponse",
-        conversationHistory,
-        npc: {
-          nome_completo_npc: triggeredNpc.nome_completo_npc,
-          cargo_funcao_npc_e_relacao_com_equipe:
-            triggeredNpc.cargo_funcao_npc_e_relacao_com_equipe,
-          perfil_psicologico_e_historico_npc_narrativa:
-            triggeredNpc.perfil_psicologico_e_historico_npc_narrativa,
-          modus_operandi_comunicacional_npc:
-            triggeredNpc.modus_operandi_comunicacional_npc,
-          gatilho_e_mensagem_de_entrada_em_cena_npc:
-            triggeredNpc.gatilho_e_mensagem_de_entrada_em_cena_npc,
-          prompt_diretriz_para_ia_roleplay_npc:
-            triggeredNpc.prompt_diretriz_para_ia_roleplay_npc,
-        } as ScenarioEntity["entidades_interativas_nao_jogaveis_ia"][0],
-      };
+//       const payload = {
+//         action: "generateNpcResponse",
+//         conversationHistory,
+//         npc: {
+//           nome_completo_npc: triggeredNpc.nome_completo_npc,
+//           cargo_funcao_npc_e_relacao_com_equipe:
+//             triggeredNpc.cargo_funcao_npc_e_relacao_com_equipe,
+//           perfil_psicologico_e_historico_npc_narrativa:
+//             triggeredNpc.perfil_psicologico_e_historico_npc_narrativa,
+//           modus_operandi_comunicacional_npc:
+//             triggeredNpc.modus_operandi_comunicacional_npc,
+//           gatilho_e_mensagem_de_entrada_em_cena_npc:
+//             triggeredNpc.gatilho_e_mensagem_de_entrada_em_cena_npc,
+//           prompt_diretriz_para_ia_roleplay_npc:
+//             triggeredNpc.prompt_diretriz_para_ia_roleplay_npc,
+//         } as ScenarioEntity["entidades_interativas_nao_jogaveis_ia"][0],
+//       };
 
-      const response = await axios.post<{ npcResponse: string }>(
-        generatorApiGatewayUrl,
-        payload,
-      );
+//       const response = await axios.post<{ npcResponse: string }>(
+//         generatorApiGatewayUrl,
+//         payload,
+//       );
 
-      if (response.data && response.data.npcResponse) {
-        await message.channel.send(response.data.npcResponse);
-      }
-    } catch (error) {
-      console.error("Erro ao lidar com a interação do NPC:", error);
-      await message.channel.send(
-        "Ocorreu um erro ao processar a resposta do NPC.",
-      );
-    }
-  }
-});
+//       if (response.data && response.data.npcResponse) {
+//         await message.channel.send(response.data.npcResponse);
+//       }
+//     } catch (error) {
+//       console.error("Erro ao lidar com a interação do NPC:", error);
+//       await message.channel.send(
+//         "Ocorreu um erro ao processar a resposta do NPC.",
+//       );
+//     }
+//   }
+// });
 
 client.login(botToken);

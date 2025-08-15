@@ -6,7 +6,11 @@ import {
   SlashCommandBuilder,
 } from "discord.js";
 import type { BotCommand } from "../../types/discord-slash-commands.ts";
-import { type SessionEntity, SessionModel } from "../../../shared/models.ts";
+import {
+  SessionModel,
+  SessionParticipantModel,
+} from "../../../shared/models.ts";
+import { collectListener, endListener } from "./collectorListeners.ts";
 
 const command: BotCommand = {
   data: new SlashCommandBuilder()
@@ -23,32 +27,35 @@ const command: BotCommand = {
       });
       return;
     }
+    await interaction.deferReply({ ephemeral: true });
 
-    const activeSessions = await SessionModel.find({
-      status: "ACTIVE",
-    }, { index: "gs1" });
+    const [activeSessions, formingSessions, userParticipantEntities] =
+      await Promise.all([
+        SessionModel.find({
+          status: "ACTIVE",
+        }, { index: "gs1" }),
+        SessionModel.find({
+          status: "FORMING",
+        }, { index: "gs1" }),
+        SessionParticipantModel.find({
+          participantId: interaction.user.id,
+        }, { index: "gs1" }),
+      ]);
 
-    const formingSessions = await SessionModel.find({
-      status: "FORMING",
-    }, { index: "gs1" });
+    const userOwnedSession = [...activeSessions, ...formingSessions].find(
+      (session) =>
+        userParticipantEntities.some((part) =>
+          part.role === "owner" && part.sessionId === session.sessionId
+        ),
+    );
 
-    const getOwnedGroup = (sessions: SessionEntity[]) =>
-      sessions.find((sess) =>
-        sess.participants.some(
-          (part) => part.id === interaction.user.id && part.role === "owner",
-        )
-      );
-
-    const session = getOwnedGroup([...formingSessions, ...activeSessions]);
-    if (!session) {
-      await interaction.reply({
+    if (!userOwnedSession) {
+      await interaction.followUp({
         content: "Você não é o dono de nenhum grupo ativo ou em formação.",
         ephemeral: true,
       });
       return;
     }
-
-    await interaction.deferReply({ ephemeral: true });
 
     const confirmButton = new ButtonBuilder()
       .setCustomId("confirm_end_session")
@@ -70,68 +77,22 @@ const command: BotCommand = {
       ephemeral: true,
     });
 
-    const collectorFilter = (i: { user: { id: string } }) =>
-      i.user.id === interaction.user.id;
+    const oneMinuteMs = 60000;
+    const collector = reply.createMessageComponentCollector({
+      time: oneMinuteMs,
+      componentType: ComponentType.Button,
+    });
 
-    try {
-      const confirmation = await reply.awaitMessageComponent({
-        filter: collectorFilter,
-        time: 60_000,
-        componentType: ComponentType.Button,
-      });
-
-      if (confirmation.customId === "confirm_end_session") {
-        await confirmation.update({
-          content: "Encerrando sessão...",
-          components: [],
-        });
-
-        try {
-          await SessionModel.update({
-            sessionId: session.sessionId,
-            status: "ENDED",
-          }, { index: "primary" });
-
-          await interaction.followUp({
-            content: "Sessão encerrada com sucesso!",
-            ephemeral: true,
-          });
-          console.log(
-            `Sessão encerrada. Session ID: ${session.sessionId}`,
-          );
-        } catch (error) {
-          console.error("Erro ao encerrar sessão:", error);
-          await interaction.followUp({
-            content:
-              "Ocorreu um erro ao tentar encerrar a sessão. Por favor, tente novamente.",
-            ephemeral: true,
-          });
-        }
-      } else if (confirmation.customId === "cancel_end_session") {
-        await confirmation.update({
-          content: "Operação de encerramento de sessão cancelada.",
-          components: [],
-        });
-      }
-    } catch (e) {
-      if (
-        e instanceof Error &&
-        e.message.includes(
-          "Collector received no interactions before the time limit",
-        )
-      ) {
-        await interaction.editReply({
-          content: "Tempo esgotado para confirmar o encerramento da sessão.",
-          components: [],
-        });
-      } else {
-        console.error("Erro ao aguardar interação do botão:", e);
-        await interaction.editReply({
-          content: "Ocorreu um erro inesperado ao processar sua solicitação.",
-          components: [],
-        });
-      }
-    }
+    collector.on(
+      "collect",
+      (collectorInteraction) =>
+        collectListener(
+          interaction,
+          collectorInteraction,
+          userOwnedSession,
+        ),
+    );
+    collector.on("end", (_collectorInteraction) => endListener(interaction));
   },
 };
 

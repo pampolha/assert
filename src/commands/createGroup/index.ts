@@ -12,6 +12,8 @@ import {
   ScenarioModel,
   type SessionEntity,
   SessionModel,
+  type SessionParticipantEntity,
+  SessionParticipantModel,
 } from "../../../shared/models.ts";
 
 const command: BotCommand = {
@@ -34,24 +36,27 @@ const command: BotCommand = {
 
     await interaction.deferReply();
 
-    const activeSessions = await SessionModel.find({
-      status: "ACTIVE",
-    }, { index: "gs1" });
-    const formingSessions = await SessionModel.find({
-      status: "FORMING",
-    }, { index: "gs1" });
+    const [formingSessions, userParticipantEntities] = await Promise.all([
+      SessionModel.find({ status: "FORMING" }, {
+        index: "gs1",
+      }),
+      SessionParticipantModel.find({
+        participantId: interaction.user.id,
+      }, { index: "gs1" }),
+    ]);
 
-    const inRunningSession = activeSessions.some((session) =>
-      session.participants.some((p) => p.id === interaction.user.id)
+    const userAlreadyHasFormingSession = formingSessions.find((
+      formingSession,
+    ) =>
+      userParticipantEntities.some((participantEntity) =>
+        participantEntity.sessionId === formingSession.sessionId &&
+        participantEntity.role === "owner"
+      )
     );
 
-    const inFormingSession = formingSessions.some((session) =>
-      session.participants.some((p) => p.id === interaction.user.id)
-    );
-
-    if (inFormingSession || inRunningSession) {
+    if (userAlreadyHasFormingSession) {
       await interaction.reply({
-        content: "Você já está em um grupo em formação ou andamento.",
+        content: "Você já possui um grupo em formação.",
         ephemeral: true,
       });
       return;
@@ -74,23 +79,28 @@ const command: BotCommand = {
     }
 
     const sessionId = crypto.randomUUID();
-    const oneWeekFromNowMs = Date.now() + (1000 * 60 * 60 * 24 * 7);
+    const oneHourFromNowMs = Date.now() + 60_000;
 
     const sessionEntity: SessionEntity = {
-      sessionId: sessionId,
+      sessionId,
       scenarioId: latestScenario.scenarioId,
       status: "FORMING",
-      participants: [{
-        id: interaction.user.id,
-        tag: interaction.user.tag,
-        role: "owner",
-      }],
-      expiryDate: oneWeekFromNowMs,
+      expiryDate: oneHourFromNowMs,
     };
 
-    SessionModel.create(
-      sessionEntity,
-    );
+    const participantEntity: SessionParticipantEntity = {
+      sessionId,
+      participantId: interaction.user.id,
+      tag: interaction.user.tag,
+      role: "owner",
+    };
+
+    await Promise.all([
+      SessionModel.create(
+        sessionEntity,
+      ),
+      SessionParticipantModel.create(participantEntity),
+    ]);
 
     const groupMessageActionRow = new ActionRowBuilder<ButtonBuilder>();
     const groupSize = 4;
@@ -118,7 +128,7 @@ const command: BotCommand = {
       components: [groupMessageActionRow],
     });
 
-    const oneHourMs = 1000 * 60 * 60;
+    const oneHourMs = 60_000;
     const collector = groupMessage.createMessageComponentCollector({
       componentType: ComponentType.Button,
       time: oneHourMs,

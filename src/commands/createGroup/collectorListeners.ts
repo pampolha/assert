@@ -6,19 +6,20 @@ import {
   type CommandInteraction,
 } from "discord.js";
 import type { Message } from "discord.js";
-import { type SessionEntity, SessionModel } from "../../../shared/models.ts";
+import {
+  type SessionEntity,
+  SessionModel,
+  type SessionParticipantEntity,
+  SessionParticipantModel,
+} from "../../../shared/models.ts";
 
 const getUpdatedButtonRow = (
-  { session, groupMessageActionRow, collectorInteraction }: {
+  { sessionMembers, groupMessageActionRow, collectorInteraction }: {
     collectorInteraction: ButtonInteraction;
     groupMessageActionRow: ActionRowBuilder<ButtonBuilder>;
-    session: SessionEntity;
+    sessionMembers: SessionParticipantEntity[];
   },
 ): ActionRowBuilder<ButtonBuilder> => {
-  const sessionMembers = session.participants.filter((part) =>
-    part.role === "member"
-  );
-
   const updatedButtonRow = new ActionRowBuilder<ButtonBuilder>();
   groupMessageActionRow.components.forEach((_button, i) => {
     const label = sessionMembers.at(i)?.tag;
@@ -58,9 +59,13 @@ const handleGroupSpotLeaveButtonInteraction = async (
     session,
   } = input;
 
+  const sessionParticipants = await SessionParticipantModel.find({
+    sessionId: session.sessionId,
+  });
+
   if (
-    !session.participants.some((part) =>
-      part.id === collectorInteraction.user.id
+    !sessionParticipants.some((part) =>
+      part.participantId === collectorInteraction.user.id
     )
   ) {
     await collectorInteraction.reply({
@@ -72,7 +77,7 @@ const handleGroupSpotLeaveButtonInteraction = async (
 
   if (
     collectorInteraction.user.id ===
-      session.participants.find((part) => part.role === "owner")?.id
+      sessionParticipants.find((part) => part.role === "owner")?.participantId
   ) {
     await collectorInteraction.reply({
       content:
@@ -82,20 +87,16 @@ const handleGroupSpotLeaveButtonInteraction = async (
     return;
   }
 
-  session.participants = session.participants.filter((part) =>
-    part.id !== collectorInteraction.user.id
+  await SessionParticipantModel.remove({
+    sessionId: session.sessionId,
+    participantId: collectorInteraction.user.id,
+  }, { index: "primary" });
+
+  const sessionMembers = sessionParticipants.filter((part) =>
+    part.participantId !== collectorInteraction.user.id &&
+    part.role === "member"
   );
-
-  try {
-    await SessionModel.update({
-      sessionId: session.sessionId,
-      participants: session.participants,
-    }, { index: "primary" });
-  } catch (error) {
-    console.error("Failed to update session in DynamoDB:", error);
-  }
-
-  const updatedButtonRow = getUpdatedButtonRow(input);
+  const updatedButtonRow = getUpdatedButtonRow({ ...input, sessionMembers });
 
   await collectorInteraction.update({ components: [updatedButtonRow] });
 };
@@ -112,11 +113,19 @@ const collectListener = async (input: {
     groupMessageActionRow,
   } = input;
 
-  const formingSessions = await SessionModel.find({ status: "FORMING" }, {
-    index: "gs1",
-  });
-  const session = formingSessions.find((session) =>
-    session.participants.some((p) => p.id === commandInteraction.user.id)
+  const [formingSessions, ownerSessions] = await Promise.all([
+    SessionModel.find({ status: "FORMING" }, {
+      index: "gs1",
+    }),
+    SessionParticipantModel.find({
+      participantId: commandInteraction.user.id,
+    }, { index: "gs1" }),
+  ]);
+
+  const session = formingSessions.find((formingSession) =>
+    ownerSessions.some((ownerSession) =>
+      ownerSession.sessionId === formingSession.sessionId
+    )
   );
 
   if (!session) {
@@ -135,9 +144,13 @@ const collectListener = async (input: {
     });
   }
 
+  const sessionParticipants = await SessionParticipantModel.find({
+    sessionId: session.sessionId,
+  }, { index: "primary" });
+
   if (
-    session.participants.some((part) =>
-      part.id === collectorInteraction.user.id
+    sessionParticipants.some((part) =>
+      part.participantId === collectorInteraction.user.id
     )
   ) {
     await collectorInteraction.reply({
@@ -147,7 +160,7 @@ const collectListener = async (input: {
     return;
   }
 
-  if (session.participants.length >= 4) {
+  if (sessionParticipants.length >= 4) {
     await collectorInteraction.reply({
       content: "Este grupo já está cheio",
       ephemeral: true,
@@ -155,23 +168,19 @@ const collectListener = async (input: {
     return;
   }
 
-  session.participants.push({
-    id: collectorInteraction.user.id,
-    tag: collectorInteraction.user.tag,
+  await SessionParticipantModel.create({
+    sessionId: session.sessionId,
+    participantId: collectorInteraction.user.id,
     role: "member",
-  });
+    tag: collectorInteraction.user.tag,
+  }, { index: "primary" });
 
-  try {
-    await SessionModel.update({
-      sessionId: session.sessionId,
-      participants: session.participants,
-    }, { index: "primary" });
-  } catch (error) {
-    console.error("Failed to update session in DynamoDB:", error);
-  }
+  const sessionMembers = sessionParticipants.filter((part) =>
+    part.role === "member"
+  );
 
   const updatedButtonRow = getUpdatedButtonRow({
-    session,
+    sessionMembers,
     groupMessageActionRow,
     collectorInteraction,
   });

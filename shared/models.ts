@@ -30,24 +30,36 @@ const schema = {
         enum: ["FORMING", "ACTIVE", "ENDED"],
         required: true,
       },
-      participants: {
-        type: Array,
-        required: true,
-        items: {
-          type: Object,
-          required: true,
-          schema: {
-            id: { type: String, required: true },
-            tag: { type: String, required: true },
-            role: { type: String, enum: ["owner", "member"], required: true },
-          },
-        },
-      },
       expiryDate: { type: Number, ttl: true, required: true },
       PK: { type: String, value: "SESSION#${sessionId}" },
       SK: { type: String, value: "SESSION" },
       GS1PK: { type: String, value: "SESSION#${status}" },
       GS1SK: { type: String, value: "SESSION#${created}" },
+      created: { type: Date, timestamp: true },
+      updated: { type: Date, timestamp: true },
+    },
+    SessionParticipant: {
+      sessionId: { type: String, required: true },
+      participantId: { type: String, required: true },
+      tag: { type: String, required: true },
+      role: { type: String, enum: ["owner", "member"], required: true },
+      PK: { type: String, value: "SESSION#${sessionId}" },
+      SK: { type: String, value: "PARTICIPANT#${participantId}" },
+      GS1PK: { type: String, value: "PARTICIPANT#${participantId}" },
+      GS1SK: { type: String, value: "SESSION#${sessionId}" },
+      created: { type: Date, timestamp: true },
+      updated: { type: Date, timestamp: true },
+    },
+    SessionChannel: {
+      sessionId: { type: String, required: true },
+      channelId: { type: String, required: true },
+      type: {
+        type: String,
+        required: true,
+        enum: ["category", "textChannel", "voiceChannel"],
+      },
+      PK: { type: String, value: "SESSION#${sessionId}" },
+      SK: { type: String, value: "CHANNEL#${channelId}" },
       created: { type: Date, timestamp: true },
       updated: { type: Date, timestamp: true },
     },
@@ -158,6 +170,12 @@ const table = new Table({
 
 export type SessionEntity = Entity<typeof schema.models.Session>;
 export type ScenarioEntity = Entity<typeof schema.models.Scenario>;
+export type SessionParticipantEntity = Entity<
+  typeof schema.models.SessionParticipant
+>;
+export type SessionChannelEntity = Entity<typeof schema.models.SessionChannel>;
 
 export const SessionModel = table.getModel("Session");
 export const ScenarioModel = table.getModel("Scenario");
+export const SessionParticipantModel = table.getModel("SessionParticipant");
+export const SessionChannelModel = table.getModel("SessionChannel");
