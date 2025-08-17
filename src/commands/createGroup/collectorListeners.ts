@@ -168,12 +168,14 @@ const collectListener = async (input: {
     return;
   }
 
-  await SessionParticipantModel.create({
+  const newParticipant = await SessionParticipantModel.create({
     sessionId: session.sessionId,
     participantId: collectorInteraction.user.id,
     role: "member",
     tag: collectorInteraction.user.tag,
   });
+
+  sessionParticipants.push(newParticipant);
 
   const sessionMembers = sessionParticipants.filter((part) =>
     part.role === "member"
