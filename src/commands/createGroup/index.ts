@@ -79,7 +79,7 @@ const command: BotCommand = {
     }
 
     const sessionId = crypto.randomUUID();
-    const oneHourFromNowMs = Date.now() + 60_000;
+    const oneHourFromNowMs = Date.now() + (60_000 * 60);
 
     const sessionEntity: SessionEntity = {
       sessionId,
@@ -128,7 +128,7 @@ const command: BotCommand = {
       components: [groupMessageActionRow],
     });
 
-    const oneHourMs = 60_000;
+    const oneHourMs = 60_000 * 60;
     const collector = groupMessage.createMessageComponentCollector({
       componentType: ComponentType.Button,
       time: oneHourMs,

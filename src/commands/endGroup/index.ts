@@ -77,7 +77,7 @@ const command: BotCommand = {
       ephemeral: true,
     });
 
-    const oneMinuteMs = 60000;
+    const oneMinuteMs = 60_000;
     const collector = reply.createMessageComponentCollector({
       time: oneMinuteMs,
       componentType: ComponentType.Button,
