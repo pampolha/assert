@@ -9,9 +9,8 @@ import path from "node:path";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import type { BotCommand } from "./types/discord-slash-commands.ts";
-import type { SessionData } from "./types/session.ts";
-import axios from "axios";
-import { botToken, generatorApiGatewayUrl } from "../shared/env.ts";
+import { botToken, mainChannelId } from "../shared/env.ts";
+import { handleNpcMention } from "./npcInteractionHandler.ts";
 
 const client = new Client({
   intents: [
@@ -29,7 +28,6 @@ const client = new Client({
 });
 
 client.commands = new Collection<string, BotCommand>();
-client.activeSessions = new Collection<string, SessionData>();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,21 +35,26 @@ const __dirname = path.dirname(__filename);
 const commandsPath = path.join(__dirname, "commands");
 
 async function loadCommands() {
-  const commandFiles = fs
-    .readdirSync(commandsPath)
-    .filter((file) => file.endsWith(".ts"));
+  const commandDirs = fs
+    .readdirSync(commandsPath, { withFileTypes: true })
+    .filter((dirent) => dirent.isDirectory())
+    .map((dirent) => dirent.name);
 
-  for (const file of commandFiles) {
-    const filePath = path.join(commandsPath, file);
+  for (const dir of commandDirs) {
+    const indexPath = path.join(commandsPath, dir, "index.ts");
 
-    const command: BotCommand = (await import(filePath)).default;
+    if (fs.existsSync(indexPath)) {
+      const command: BotCommand = (await import(indexPath)).default;
 
-    if ("data" in command && "execute" in command) {
-      client.commands.set(command.data.name, command);
+      if ("data" in command && "execute" in command) {
+        client.commands.set(command.data.name, command);
+      } else {
+        console.warn(
+          `Command at ${indexPath} does not have "data" and/or "execute" properties.`,
+        );
+      }
     } else {
-      console.warn(
-        `[AVISO] O comando em ${filePath} está faltando uma propriedade "data" ou "execute" obrigatória.`,
-      );
+      console.warn(`Command at ${indexPath} does not have an "index.ts" file`);
     }
   }
 }
@@ -92,68 +95,17 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 });
 
-client.on(Events.MessageCreate, async (message) => {
-  if (message.author.bot || !generatorApiGatewayUrl) return;
+client.on(Events.MessageCreate, (message) => {
+  if (
+    !(
+      message.guild &&
+      message.channel.isTextBased() &&
+      message.channel.id !== mainChannelId &&
+      message.content.includes("@")
+    )
+  ) return;
 
-  const session = client.activeSessions.get(message.channel.id);
-  if (!session) return;
-
-  const triggeredNpc = session.scenario.entidades_interativas_nao_jogaveis_ia
-    .find((npc) =>
-      message.content
-        .toLowerCase()
-        .includes("@" + npc.nome_completo_npc.toLowerCase())
-    );
-
-  if (triggeredNpc) {
-    try {
-      await message.channel.sendTyping();
-
-      const messageHistory = await message.channel.messages.fetch({
-        limit: 50,
-      });
-
-      const conversationHistory = messageHistory
-        .reverse()
-        .map((msg) => `${msg.author.username}: ${msg.content}`)
-        .join("\n");
-
-      const payload = {
-        action: "generateNpcResponse",
-        conversationHistory,
-        npc: {
-          nome_completo_npc: triggeredNpc.nome_completo_npc,
-          cargo_funcao_npc_e_relacao_com_equipe:
-            triggeredNpc.cargo_funcao_npc_e_relacao_com_equipe,
-          perfil_psicologico_e_historico_npc_narrativa:
-            triggeredNpc.perfil_psicologico_e_historico_npc_narrativa,
-          modus_operandi_comunicacional_npc:
-            triggeredNpc.modus_operandi_comunicacional_npc,
-          gatilho_e_mensagem_de_entrada_em_cena_npc:
-            triggeredNpc.gatilho_e_mensagem_de_entrada_em_cena_npc,
-          prompt_diretriz_para_ia_roleplay_npc:
-            triggeredNpc.prompt_diretriz_para_ia_roleplay_npc,
-        },
-      };
-
-      const response = await axios.post<{ npcResponse: string }>(
-        generatorApiGatewayUrl,
-        payload,
-      );
-
-      //debug
-      console.log({ npcresponse: response.data });
-
-      if (response.data && response.data.npcResponse) {
-        await message.channel.send(response.data.npcResponse);
-      }
-    } catch (error) {
-      console.error("Erro ao lidar com a interação do NPC:", error);
-      await message.channel.send(
-        "Ocorreu um erro ao processar a resposta do NPC.",
-      );
-    }
-  }
+  handleNpcMention(message);
 });
 
 client.login(botToken);

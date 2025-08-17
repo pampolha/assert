@@ -8,9 +8,9 @@ terraform {
     }
   }
   backend "s3" {
-    bucket  = "assert-terraform-state"
+    bucket  = "assert-tf-state"
     key     = "state/terraform.tfstate"
-    region  = "us-east-1"
+    region  = "us-east-2"
     encrypt = true
   }
 }
@@ -43,7 +43,7 @@ resource "aws_lambda_function" "generator" {
 
   environment {
     variables = {
-      OPENAI_API_KEY = var.openai_api_key
+      OPENROUTER_API_KEY = var.openrouter_api_key
     }
   }
 }
@@ -81,10 +81,11 @@ resource "aws_lambda_permission" "apigw" {
 }
 
 resource "aws_dynamodb_table" "single_table" {
-  name         = "assert-single-table"
+  name         = "assert-table"
   billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "PK"
-  range_key    = "SK"
+
+  hash_key = "PK"
+  range_key = "SK"
 
   attribute {
     name = "PK"
@@ -97,69 +98,30 @@ resource "aws_dynamodb_table" "single_table" {
   }
 
   attribute {
-    name = "GSI1PK"
+    name = "GS1PK"
     type = "S"
   }
 
   attribute {
-    name = "GSI1SK"
+    name = "GS1SK"
     type = "S"
-  }
-
-  attribute {
-    name = "GSI2PK"
-    type = "S"
-  }
-
-  attribute {
-    name = "GSI2SK"
-    type = "S"
-  }
-
-  attribute {
-    name = "Status"
-    type = "S"
-  }
-
-  attribute {
-    name = "UserID"
-    type = "S"
-  }
-
-  attribute {
-    name = "expiry_date"
-    type = "N"
   }
 
   global_secondary_index {
-    name            = "GSI1"
-    hash_key        = "GSI1PK"
-    range_key       = "GSI1SK"
-    projection_type = "ALL"
-  }
-
-  global_secondary_index {
-    name            = "GSI2"
-    hash_key        = "Status"
-    range_key       = "GSI1SK"
-    projection_type = "ALL"
-  }
-
-  global_secondary_index {
-    name            = "GSI3"
-    hash_key        = "UserID"
-    range_key       = "GSI2SK"
+    name            = "gs1"
+    hash_key        = "GS1PK"
+    range_key       = "GS1SK"
     projection_type = "ALL"
   }
 
   ttl {
-    attribute_name = "expiry_date"
+    attribute_name = "expiryDate"
     enabled        = true
   }
 }
 
-variable "openai_api_key" {
-  description = "A chave da API da OpenAI para a função Lambda."
+variable "openrouter_api_key" {
+  description = "A chave da API do roteador OpenRouter para a função Lambda."
   type        = string
   sensitive   = true                                                                                                                                  
 }

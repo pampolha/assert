@@ -1,40 +1,183 @@
-import dynamoose from 'npm:dynamoose';
-import type { SchemaDefinition } from 'npm:dynamoose/dist/Schema';
+import { type Entity, type OneSchema, Table } from "npm:dynamodb-onetable";
+import { DynamoDBClient } from "npm:@aws-sdk/client-dynamodb";
+import { awsAccessKeyId, awsRegion, awsSecretAccessKey } from "./env.ts";
 
-const sessionSchema: SchemaDefinition = {
-  PK: {
-    type: String,
-    hashKey: true,
+const client = new DynamoDBClient({
+  credentials: {
+    accessKeyId: awsAccessKeyId,
+    secretAccessKey: awsSecretAccessKey,
   },
-  SK: {
-    type: String,
-    rangeKey: true,
-  },
-  GSI1PK: String,
-  GSI1SK: String,
-  GSI2PK: String,
-  GSI2SK: String,
-  ScenarioData: Object,
-  NPCs: Array,
-  Status: String,
-  UserID: String,
-  expiry_date: Number,
-};
+  region: awsRegion,
+});
 
-const npcSchema: SchemaDefinition = {
-  PK: {
-    type: String,
-    hashKey: true,
+const schema = {
+  format: "onetable:1.1.0",
+  version: "0.0.1",
+  name: "assert-table",
+  indexes: {
+    primary: { hash: "PK", sort: "SK" },
+    gs1: { hash: "GS1PK", sort: "GS1SK" },
   },
-  SK: {
-    type: String,
-    rangeKey: true,
+  models: {
+    Session: {
+      sessionId: {
+        type: String,
+        required: true,
+      },
+      scenarioId: { type: String, required: true },
+      status: {
+        type: String,
+        enum: ["FORMING", "ACTIVE", "ENDED"],
+        required: true,
+      },
+      expiryDate: { type: Number, ttl: true, required: true },
+      PK: { type: String, value: "SESSION#${sessionId}" },
+      SK: { type: String, value: "SESSION" },
+      GS1PK: { type: String, value: "SESSION#${status}" },
+      GS1SK: { type: String, value: "SESSION#${created}" },
+      created: { type: Date, timestamp: true },
+      updated: { type: Date, timestamp: true },
+    },
+    SessionParticipant: {
+      sessionId: { type: String, required: true },
+      participantId: { type: String, required: true },
+      tag: { type: String, required: true },
+      role: { type: String, enum: ["owner", "member"], required: true },
+      PK: { type: String, value: "SESSION#${sessionId}" },
+      SK: { type: String, value: "PARTICIPANT#${participantId}" },
+      GS1PK: { type: String, value: "PARTICIPANT#${participantId}" },
+      GS1SK: { type: String, value: "SESSION#${sessionId}" },
+      created: { type: Date, timestamp: true },
+      updated: { type: Date, timestamp: true },
+    },
+    SessionChannel: {
+      sessionId: { type: String, required: true },
+      channelId: { type: String, required: true },
+      type: {
+        type: String,
+        required: true,
+        enum: ["category", "textChannel", "voiceChannel"],
+      },
+      PK: { type: String, value: "SESSION#${sessionId}" },
+      SK: { type: String, value: "CHANNEL#${channelId}" },
+      GS1PK: { type: String, value: "CHANNEL#${channelId}" },
+      GS1SK: { type: String, value: "CHANNEL#${type}" },
+      created: { type: Date, timestamp: true },
+      updated: { type: Date, timestamp: true },
+    },
+    Scenario: {
+      scenarioId: { type: String, required: true },
+      titulo_cenario: { type: String, required: true },
+      lore_do_mundo_corporativo: {
+        type: Object,
+        required: true,
+        schema: {
+          nome_empresa: { type: String, required: true },
+          cultura_organizacional_e_valores: { type: String, required: true },
+          historico_relevante_empresa: { type: String, required: true },
+          projeto_central_nome_e_visao: { type: String, required: true },
+          estado_atual_do_projeto_e_desafios: { type: String, required: true },
+        },
+      },
+      o_incidente_critico_narrativa_detalhada: { type: String, required: true },
+      dramatis_personae_jogaveis: {
+        type: Array,
+        required: true,
+        items: {
+          type: Object,
+          required: true,
+          schema: {
+            nome_completo_personagem: { type: String, required: true },
+            cargo_funcao_detalhado: { type: String, required: true },
+            background_e_personalidade_narrativa: {
+              type: String,
+              required: true,
+            },
+            objetivos_pessoais_na_situacao: {
+              type: Array,
+              required: true,
+              items: { type: String, required: true },
+            },
+            informacao_privilegiada_ou_segredo_narrativo: {
+              type: String,
+              required: true,
+            },
+          },
+        },
+      },
+      entidades_interativas_nao_jogaveis_ia: {
+        type: Array,
+        required: true,
+        items: {
+          type: Object,
+          required: true,
+          schema: {
+            nome_completo_npc: { type: String, required: true },
+            cargo_funcao_npc_e_relacao_com_equipe: {
+              type: String,
+              required: true,
+            },
+            perfil_psicologico_e_historico_npc_narrativa: {
+              type: String,
+              required: true,
+            },
+            modus_operandi_comunicacional_npc: { type: String, required: true },
+            gatilho_e_mensagem_de_entrada_em_cena_npc: {
+              type: String,
+              required: true,
+            },
+            prompt_diretriz_para_ia_roleplay_npc: {
+              type: String,
+              required: true,
+            },
+          },
+        },
+      },
+      missao_principal_da_equipe_na_simulacao: { type: String, required: true },
+      arcos_de_decisao_e_consequencias_potenciais: {
+        type: Array,
+        required: true,
+        items: { type: String, required: true },
+      },
+      soft_skills_centrais_em_jogo: {
+        type: Array,
+        required: true,
+        items: { type: String, required: true },
+      },
+      artefatos_ou_recursos_disponiveis_no_cenario: {
+        type: Array,
+        required: true,
+        items: { type: String, required: true },
+      },
+      PK: { type: String, value: "SCENARIO#${scenarioId}" },
+      SK: { type: String, value: "SCENARIO" },
+      GS1PK: { type: String, value: "SCENARIO" },
+      GS1SK: { type: String, value: "SCENARIO#${created}" },
+      created: { type: Date, timestamp: true },
+      updated: { type: Date, timestamp: true },
+    },
+  } as const,
+  params: {
+    timestamps: true,
+    separator: "#",
   },
-  Name: String,
-  ResponsePattern: String,
-  LastInteraction: Date,
-  SessionID: String,
-};
+} satisfies OneSchema;
 
-export const Session = dynamoose.model('Session', new dynamoose.Schema(sessionSchema));
-export const NPC = dynamoose.model('NPC', new dynamoose.Schema(npcSchema));
+const table = new Table({
+  client,
+  schema,
+  name: "assert-table",
+  partial: true,
+});
+
+export type SessionEntity = Entity<typeof schema.models.Session>;
+export type ScenarioEntity = Entity<typeof schema.models.Scenario>;
+export type SessionParticipantEntity = Entity<
+  typeof schema.models.SessionParticipant
+>;
+export type SessionChannelEntity = Entity<typeof schema.models.SessionChannel>;
+
+export const SessionModel = table.getModel("Session");
+export const ScenarioModel = table.getModel("Scenario");
+export const SessionParticipantModel = table.getModel("SessionParticipant");
+export const SessionChannelModel = table.getModel("SessionChannel");

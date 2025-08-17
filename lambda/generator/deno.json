@@ -1,15 +1,15 @@
 {
   "name": "@assert/generator-lambda",
   "version": "1.0.0",
-  "description": "Lambda function for generating scenarios with OpenAI API",
+  "description": "Lambda function for handling text generation",
   "exports": "./src/index.ts",
   "tasks": {
-    "build": "deno bundle src/index.ts -o index.js && echo '{\"type\": \"module\"}' > package.json && zip -X ../../assert-generator-payload.zip index.js package.json && rm index.js package.json",
-    "dev": "deno run --allow-all --watch src/index.ts",
-    "check": "deno check src/index.ts"
+    "build": "deno bundle src/index.ts -o index.js && echo '{\"type\": \"module\"}' > package.json && zip -X -D -9 -r -u ../../assert-generator-payload.zip index.js package.json && rm index.js package.json",
+    "dev": "deno run --allow-all --watch --env-file=../../.env src/index.ts",
+    "trigger-scenario": "deno run --allow-net --allow-env --allow-read --env-file=../../.env src/tasks/triggerScenario.ts"
   },
   "imports": {
-    "dotenv": "https://esm.sh/dotenv@16.5.0",
-    "openai": "https://esm.sh/openai@5.2.0"
+    "openai": "jsr:@openai/openai@^5.12.1",
+    "zod": "npm:zod@^4.0.15"
   }
 }

@@ -27,21 +27,26 @@ const __dirname = path.dirname(__filename);
 const commandsPath = path.join(__dirname, "commands");
 
 async function loadCommands() {
-  const commandFiles = fs
-    .readdirSync(commandsPath)
-    .filter((file) => file.endsWith(".ts"));
+  const commandDirs = fs
+    .readdirSync(commandsPath, { withFileTypes: true })
+    .filter((dirent) => dirent.isDirectory())
+    .map((dirent) => dirent.name);
 
-  for (const file of commandFiles) {
-    const filePath = path.join(commandsPath, file);
+  for (const dir of commandDirs) {
+    const indexPath = path.join(commandsPath, dir, "index.ts");
 
-    const command: BotCommand = (await import(filePath)).default;
+    if (fs.existsSync(indexPath)) {
+      const command: BotCommand = (await import(indexPath)).default;
 
-    if ("data" in command && "execute" in command) {
-      commands.push(command.data.toJSON());
+      if ("data" in command && "execute" in command) {
+        commands.push(command.data.toJSON());
+      } else {
+        console.warn(
+          `Command at ${indexPath} does not have "data" and/or "execute" properties.`,
+        );
+      }
     } else {
-      console.warn(
-        `[AVISO] O comando em ${filePath} está faltando uma propriedade "data" ou "execute" obrigatória.`,
-      );
+      console.warn(`Command at ${indexPath} does not have an "index.ts" file`);
     }
   }
 }
