@@ -90,7 +90,7 @@ const handleGroupSpotLeaveButtonInteraction = async (
   await SessionParticipantModel.remove({
     sessionId: session.sessionId,
     participantId: collectorInteraction.user.id,
-  }, { index: "primary" });
+  });
 
   const sessionMembers = sessionParticipants.filter((part) =>
     part.participantId !== collectorInteraction.user.id &&
@@ -146,7 +146,7 @@ const collectListener = async (input: {
 
   const sessionParticipants = await SessionParticipantModel.find({
     sessionId: session.sessionId,
-  }, { index: "primary" });
+  });
 
   if (
     sessionParticipants.some((part) =>
@@ -173,7 +173,7 @@ const collectListener = async (input: {
     participantId: collectorInteraction.user.id,
     role: "member",
     tag: collectorInteraction.user.tag,
-  }, { index: "primary" });
+  });
 
   const sessionMembers = sessionParticipants.filter((part) =>
     part.role === "member"

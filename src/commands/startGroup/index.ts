@@ -62,7 +62,7 @@ const command: BotCommand = {
 
     const participants = await SessionParticipantModel.find({
       sessionId: session.sessionId,
-    }, { index: "primary" });
+    });
 
     const confirmButton = new ButtonBuilder()
       .setCustomId("confirm_start_session")

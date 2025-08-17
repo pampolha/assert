@@ -1,6 +1,10 @@
 import type { CommandInteraction } from "discord.js";
 import type { ButtonInteraction } from "discord.js";
-import { type SessionEntity, SessionModel, SessionChannelModel } from "../../../shared/models.ts";
+import {
+  SessionChannelModel,
+  type SessionEntity,
+  SessionModel,
+} from "../../../shared/models.ts";
 
 export const collectListener = async (
   commandInteraction: CommandInteraction,
@@ -19,8 +23,8 @@ export const collectListener = async (
 
     try {
       const channels = await SessionChannelModel.find({
-        sessionId: session.sessionId
-      }, { index: 'primary' });
+        sessionId: session.sessionId,
+      });
 
       const guildChannels = commandInteraction.guild.channels;
       for (const channel of channels) {
@@ -40,7 +44,7 @@ export const collectListener = async (
         await SessionModel.update({
           sessionId: session.sessionId,
           status: "ENDED",
-        }, { index: "primary" });
+        });
       }
 
       await collectorInteraction.editReply({

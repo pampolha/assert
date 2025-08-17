@@ -22,7 +22,7 @@ export const handleNpcMention = async (
   const session = await SessionModel.get({
     sessionId: sessionTextChannel.sessionId,
     status: "ACTIVE",
-  }, { index: "primary" });
+  });
 
   if (!session) {
     throw new Error(
@@ -32,9 +32,7 @@ export const handleNpcMention = async (
     );
   }
 
-  const scenario = await ScenarioModel.get({ scenarioId: session.scenarioId }, {
-    index: "primary",
-  });
+  const scenario = await ScenarioModel.get({ scenarioId: session.scenarioId });
 
   if (!scenario) {
     throw new Error(

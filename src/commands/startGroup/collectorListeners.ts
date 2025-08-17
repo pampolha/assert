@@ -145,7 +145,7 @@ export const collectListener = async (
         SessionModel.update({
           sessionId: session.sessionId,
           status: "ACTIVE",
-        }, { index: "primary" }),
+        }),
         SessionChannelModel.create({
           sessionId: session.sessionId,
           channelId: category.id,
