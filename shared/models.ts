@@ -60,6 +60,8 @@ const schema = {
       },
       PK: { type: String, value: "SESSION#${sessionId}" },
       SK: { type: String, value: "CHANNEL#${channelId}" },
+      GS1PK: { type: String, value: "CHANNEL#${channelId}" },
+      GS1SK: { type: String, value: "CHANNEL#${type}" },
       created: { type: Date, timestamp: true },
       updated: { type: Date, timestamp: true },
     },
