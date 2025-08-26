@@ -34,30 +34,34 @@ const command: BotCommand = {
       return;
     }
 
-    await interaction.deferReply();
+    await interaction.deferReply({ ephemeral: true });
 
-    const [formingSessions, userParticipantEntities] = await Promise.all([
-      SessionModel.find({ status: "FORMING" }, {
-        index: "gs1",
-      }),
-      SessionParticipantModel.find({
-        participantId: interaction.user.id,
-      }, { index: "gs1" }),
-    ]);
+    const [formingSessions, activeSessions, userParticipantEntities] =
+      await Promise.all([
+        SessionModel.find({ status: "FORMING" }, {
+          index: "gs1",
+        }),
+        SessionModel.find({ status: "ACTIVE" }, {
+          index: "gs1",
+        }),
+        SessionParticipantModel.find({
+          participantId: interaction.user.id,
+        }, { index: "gs1" }),
+      ]);
 
-    const userAlreadyHasFormingSession = formingSessions.find((
-      formingSession,
-    ) =>
-      userParticipantEntities.some((participantEntity) =>
-        participantEntity.sessionId === formingSession.sessionId &&
-        participantEntity.role === "owner"
-      )
-    );
+    const allFormingAndActiveSessions = [...formingSessions, ...activeSessions];
 
-    if (userAlreadyHasFormingSession) {
-      await interaction.reply({
-        content: "Você já possui um grupo em formação.",
-        ephemeral: true,
+    const userAlreadyHasActiveOrFormingSession = allFormingAndActiveSessions
+      .some((session) =>
+        userParticipantEntities.some((participantEntity) =>
+          participantEntity.sessionId === session.sessionId &&
+          participantEntity.role === "owner"
+        )
+      );
+
+    if (userAlreadyHasActiveOrFormingSession) {
+      await interaction.editReply({
+        content: "Você já possui um grupo em formação ou ativo.",
       });
       return;
     }
@@ -71,9 +75,8 @@ const command: BotCommand = {
     });
 
     if (!latestScenario) {
-      await interaction.reply({
+      await interaction.editReply({
         content: "Nenhum cenário disponível no momento.",
-        ephemeral: true,
       });
       return;
     }
@@ -91,7 +94,7 @@ const command: BotCommand = {
     const participantEntity: SessionParticipantEntity = {
       sessionId,
       participantId: interaction.user.id,
-      tag: interaction.user.tag,
+      username: interaction.user.username,
       role: "owner",
     };
 
@@ -122,11 +125,12 @@ const command: BotCommand = {
       }
     }
 
-    const groupMessage = await interaction.editReply({
+    const groupMessage = await interaction.channel?.send({
       content:
         `**Grupo de Sessão em Formação**\nDono: <@${interaction.user.id}>\nClique em uma vaga abaixo para entrar:`,
       components: [groupMessageActionRow],
     });
+    interaction.deleteReply();
 
     const oneHourMs = 60_000 * 60;
     const collector = groupMessage.createMessageComponentCollector({
@@ -142,17 +146,24 @@ const command: BotCommand = {
           commandInteraction: interaction,
           groupMessageActionRow,
           sessionId,
-        }),
+        }).catch((err) =>
+          console.error(
+            "Error while collecting createGroup interaction",
+            err,
+          )
+        ),
     );
 
     collector.on(
       "end",
-      () =>
+      (_collected, reason) =>
         endListener({
           groupMessage,
           groupMessageActionRow,
           commandInteraction: interaction,
-        }),
+        }, reason).catch((err) =>
+          console.error("Error while finishing createGroup collector", err)
+        ),
     );
   },
 };

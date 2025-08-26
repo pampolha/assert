@@ -98,10 +98,18 @@ const command: BotCommand = {
           collectorInteraction,
           session,
           participants,
+        ).catch((err) =>
+          console.error("Error while collecting startGroup interaction", err)
         ),
     );
 
-    collector.on("end", () => endListener(interaction));
+    collector.on(
+      "end",
+      (_collected, reason) =>
+        endListener(interaction, reason)?.catch((err) =>
+          console.error("Error while finishing startGroup collector", err)
+        ),
+    );
   },
 };
 

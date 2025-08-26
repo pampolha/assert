@@ -90,9 +90,22 @@ const command: BotCommand = {
           interaction,
           collectorInteraction,
           userOwnedSession,
+        ).then(() => collector.stop()).catch((err) => {
+          collectorInteraction.editReply({
+            content:
+              "Ocorreu um erro ao tentar encerrar a sessão. Por favor, tente novamente.",
+          });
+          console.error("Error while collecting endGroup interaction", err);
+        }),
+    );
+
+    collector.on(
+      "end",
+      (_collected, reason) =>
+        endListener(interaction, reason).catch((err) =>
+          console.error("Error while finishing endGroup collector", err)
         ),
     );
-    collector.on("end", (_collectorInteraction) => endListener(interaction));
   },
 };
 
