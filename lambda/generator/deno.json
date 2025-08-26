@@ -5,8 +5,7 @@
   "exports": "./src/index.ts",
   "tasks": {
     "build": "deno bundle src/index.ts -o index.js && echo '{\"type\": \"module\"}' > package.json && zip -X -D -9 -r -u ../../assert-generator-payload.zip index.js package.json && rm index.js package.json",
-    "dev": "deno run --allow-all --watch --env-file=../../.env src/index.ts",
-    "trigger-scenario": "deno run --allow-net --allow-env --allow-read --env-file=../../.env src/tasks/triggerScenario.ts"
+    "dev": "deno run --allow-all --watch --env-file=../../.env src/index.ts"
   },
   "imports": {
     "openai": "jsr:@openai/openai@^5.12.1",

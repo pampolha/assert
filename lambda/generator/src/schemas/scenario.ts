@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "npm:zod@^4.0.15";
 
 export const scenarioSchema = z.object({
   titulo_cenario: z.string(),

@@ -22,14 +22,15 @@ const getUpdatedButtonRow = (
 ): ActionRowBuilder<ButtonBuilder> => {
   const updatedButtonRow = new ActionRowBuilder<ButtonBuilder>();
   groupMessageActionRow.components.forEach((_button, i) => {
-    const label = sessionMembers.at(i)?.tag;
+    const customId = collectorInteraction.customId.replace(/\d$/, `${i}`);
+    const label = sessionMembers.at(i)?.username;
     const style = label ? ButtonStyle.Success : ButtonStyle.Primary;
     const isDisabled = !!label;
 
     if (i < groupMessageActionRow.components.length - 1) {
       updatedButtonRow.addComponents(
         new ButtonBuilder()
-          .setCustomId(collectorInteraction.customId + i)
+          .setCustomId(customId)
           .setLabel(label || "Vaga")
           .setStyle(style)
           .setDisabled(isDisabled),
@@ -172,7 +173,7 @@ const collectListener = async (input: {
     sessionId: session.sessionId,
     participantId: collectorInteraction.user.id,
     role: "member",
-    tag: collectorInteraction.user.tag,
+    username: collectorInteraction.user.username,
   });
 
   sessionParticipants.push(newParticipant);
@@ -194,7 +195,9 @@ const endListener = async (input: {
   commandInteraction: CommandInteraction;
   groupMessage: Message;
   groupMessageActionRow: ActionRowBuilder<ButtonBuilder>;
-}): Promise<void> => {
+}, reason: string): Promise<void> => {
+  if (reason !== "time") return;
+
   const { commandInteraction, groupMessage, groupMessageActionRow } = input;
 
   const disabledButtons = groupMessageActionRow.components.map((button) =>

@@ -1,6 +1,7 @@
 {
   "version": "5",
   "specifiers": {
+    "jsr:@openai/openai@^5.12.1": "5.12.1",
     "npm:@aws-sdk/client-dynamodb@*": "3.848.0",
     "npm:@aws-sdk/client-dynamodb@^3.848.0": "3.848.0",
     "npm:@types/node@*": "22.15.15",
@@ -9,7 +10,13 @@
     "npm:dotenv@^17.2.0": "17.2.0",
     "npm:dynamodb-onetable@*": "2.7.7_@aws-sdk+client-dynamodb@3.848.0",
     "npm:dynamodb-onetable@^2.7.7": "2.7.7_@aws-sdk+client-dynamodb@3.848.0",
-    "npm:zlib-sync@*": "0.1.10"
+    "npm:zlib-sync@*": "0.1.10",
+    "npm:zod@^4.0.15": "4.0.15"
+  },
+  "jsr": {
+    "@openai/openai@5.12.1": {
+      "integrity": "afba28fb77bbbd6a50abf5385c3b631c017e55f002ab918835e2a9b5e3fda9d7"
+    }
   },
   "npm": {
     "@aws-crypto/sha256-browser@5.2.0": {
@@ -1108,6 +1115,9 @@
         "nan"
       ],
       "scripts": true
+    },
+    "zod@4.0.15": {
+      "integrity": "sha512-2IVHb9h4Mt6+UXkyMs0XbfICUh1eUrlJJAOupBHUhLRnKkruawyDddYRCs0Eizt900ntIMk9/4RksYl+FgSpcQ=="
     }
   },
   "redirects": {

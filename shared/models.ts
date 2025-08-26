@@ -41,7 +41,7 @@ const schema = {
     SessionParticipant: {
       sessionId: { type: String, required: true },
       participantId: { type: String, required: true },
-      tag: { type: String, required: true },
+      username: { type: String, required: true },
       role: { type: String, enum: ["owner", "member"], required: true },
       PK: { type: String, value: "SESSION#${sessionId}" },
       SK: { type: String, value: "PARTICIPANT#${participantId}" },
@@ -62,6 +62,24 @@ const schema = {
       SK: { type: String, value: "CHANNEL#${channelId}" },
       GS1PK: { type: String, value: "CHANNEL#${channelId}" },
       GS1SK: { type: String, value: "CHANNEL#${type}" },
+      created: { type: Date, timestamp: true },
+      updated: { type: Date, timestamp: true },
+    },
+    SessionFeedback: {
+      sessionId: { type: String, required: true },
+      feedbackGiverId: { type: String, required: true },
+      feedbackReceiverId: { type: String, required: true },
+      feedbackText: { type: String, required: true },
+      PK: { type: String, value: "SESSION#${sessionId}" },
+      SK: {
+        type: String,
+        value: "FEEDBACK#TO${feedbackReceiverId}#FROM${feedbackGiverId}",
+      },
+      GS1PK: {
+        type: String,
+        value: "FEEDBACK#${feedbackReceiverId}",
+      },
+      GS1SK: { type: String, value: "FEEDBACK#${feedbackGiverId}" },
       created: { type: Date, timestamp: true },
       updated: { type: Date, timestamp: true },
     },
@@ -176,8 +194,12 @@ export type SessionParticipantEntity = Entity<
   typeof schema.models.SessionParticipant
 >;
 export type SessionChannelEntity = Entity<typeof schema.models.SessionChannel>;
+export type SessionFeedbackEntity = Entity<
+  typeof schema.models.SessionFeedback
+>;
 
 export const SessionModel = table.getModel("Session");
 export const ScenarioModel = table.getModel("Scenario");
 export const SessionParticipantModel = table.getModel("SessionParticipant");
 export const SessionChannelModel = table.getModel("SessionChannel");
+export const SessionFeedbackModel = table.getModel("SessionFeedback");
