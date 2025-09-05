@@ -1,5 +1,5 @@
 import { OpenAI } from "jsr:@openai/openai@^5.12.1";
-import generatorPrompt from "../lambda/generator/src/prompts/generator.ts";
+import generatorPrompt from "../lambda/generator/src/prompts/scenario.ts";
 import { scenarioSchema } from "../lambda/generator/src/schemas/scenario.ts";
 import { ScenarioModel } from "../shared/models.ts";
 import { openrouterKey } from "../shared/env.ts";
@@ -23,7 +23,7 @@ const main = async () => {
       {
         role: "user",
         content:
-          `${crypto.randomUUID()}\nPor favor, gere um novo cenário de simulação agora.`,
+          `${crypto.randomUUID()}\nPor favor, gere um novo cenário de simulação em PT-BR agora.`,
       },
     ],
     response_format: {
@@ -62,7 +62,7 @@ const main = async () => {
   });
 
   console.log(
-    `Cenário "${scenarioData.titulo_cenario}" gerado e salvo com sucesso! ID: ${scenarioId}`,
+    `Cenário gerado e salvo com sucesso! ID: ${scenarioId}`,
   );
 };
 

@@ -1,5 +1,5 @@
 import type { OpenAI } from "openai";
-import generatorPrompt from "../prompts/generator.ts";
+import generatorPrompt from "../prompts/scenario.ts";
 import { scenarioSchema } from "../schemas/scenario.ts";
 import z from "zod";
 
@@ -35,26 +35,36 @@ export const handleGenerateScenario = async (
     };
   }
 
-  const parsedContent = z.safeParse(
-    scenarioSchema,
-    JSON.parse(generatedContent),
-  );
+  try {
+    const parsedData = JSON.parse(generatedContent);
+    const parsedContent = scenarioSchema.safeParse(parsedData);
 
-  if (!parsedContent.success) {
-    console.error("Cenário gerado não corresponde ao schema definido.");
+    if (!parsedContent.success) {
+      console.error("Cenário gerado não corresponde ao schema definido:", parsedContent.error);
+      return {
+        statusCode: 500,
+        body: JSON.stringify({
+          message: "Erro: Cenário gerado não corresponde ao schema definido.",
+          error: parsedContent.error.format()
+        }),
+      };
+    }
+
+    console.log("Cenário gerado:", parsedContent.data);
+
+    return {
+      statusCode: 200,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(parsedContent.data),
+    };
+  } catch (parseError) {
+    console.error("Erro ao parsear conteúdo gerado:", parseError);
     return {
       statusCode: 500,
       body: JSON.stringify({
-        message: "Erro: Cenário gerado não corresponde ao schema definido.",
+        message: "Erro: Falha ao processar cenário gerado.",
+        error: parseError instanceof Error ? parseError.message : "Erro desconhecido"
       }),
     };
   }
-
-  console.log("Cenário gerado:", parsedContent.data);
-
-  return {
-    statusCode: 200,
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(generatedContent),
-  };
 };

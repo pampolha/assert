@@ -26,10 +26,8 @@ export const handler = (event: Record<string, unknown>) => {
 
     let requestBody: {
       action: string;
-      conversationHistory: string;
-      npc: z.output<
-        typeof scenarioSchema
-      >["entidades_interativas_nao_jogaveis_ia"][0];
+      conversationHistory?: string;
+      npc?: z.output<typeof scenarioSchema>["npcs"][0];
     };
     try {
       requestBody = JSON.parse(event.body as string);
@@ -49,7 +47,21 @@ export const handler = (event: Record<string, unknown>) => {
         return handleGenerateScenario(openrouter);
 
       case "generateNpcResponse":
-        return handleGenerateNpcResponse(requestBody, openrouter);
+        if (!requestBody.conversationHistory || !requestBody.npc) {
+          return {
+            statusCode: 400,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              message:
+                "Parâmetros 'conversationHistory' ou 'npc' ausentes para a ação 'generateNpcResponse'.",
+            }),
+          };
+        }
+        return handleGenerateNpcResponse({
+          action,
+          conversationHistory: requestBody.conversationHistory,
+          npc: requestBody.npc,
+        }, openrouter);
 
       default:
         return {

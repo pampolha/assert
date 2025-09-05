@@ -42,11 +42,11 @@ export const handleNpcMention = async (
     );
   }
 
-  const triggeredNpc = scenario.entidades_interativas_nao_jogaveis_ia
+  const triggeredNpc = scenario.npcs
     .find((npc) =>
       message.content
         .toLowerCase()
-        .includes("@" + npc.nome_completo_npc.toLowerCase().split(" ")[0])
+        .includes("@" + npc.name.toLowerCase().split(" ")[0])
     );
 
   if (triggeredNpc) {
@@ -63,22 +63,14 @@ export const handleNpcMention = async (
       const payload: {
         action: string;
         conversationHistory: string;
-        npc: ScenarioEntity["entidades_interativas_nao_jogaveis_ia"][0];
+        npc: ScenarioEntity["npcs"][0];
       } = {
         action: "generateNpcResponse",
         conversationHistory,
         npc: {
-          nome_completo_npc: triggeredNpc.nome_completo_npc,
-          cargo_funcao_npc_e_relacao_com_equipe:
-            triggeredNpc.cargo_funcao_npc_e_relacao_com_equipe,
-          perfil_psicologico_e_historico_npc_narrativa:
-            triggeredNpc.perfil_psicologico_e_historico_npc_narrativa,
-          modus_operandi_comunicacional_npc:
-            triggeredNpc.modus_operandi_comunicacional_npc,
-          gatilho_e_mensagem_de_entrada_em_cena_npc:
-            triggeredNpc.gatilho_e_mensagem_de_entrada_em_cena_npc,
-          prompt_diretriz_para_ia_roleplay_npc:
-            triggeredNpc.prompt_diretriz_para_ia_roleplay_npc,
+          name: triggeredNpc.name,
+          role: triggeredNpc.role,
+          background: triggeredNpc.background,
         },
       };
 

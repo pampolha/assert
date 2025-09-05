@@ -6,27 +6,14 @@ export const handleGenerateNpcResponse = async (
   requestBody: {
     action: string;
     conversationHistory: string;
-    npc: z.output<
-      typeof scenarioSchema
-    >["entidades_interativas_nao_jogaveis_ia"][0];
+    npc: z.output<typeof scenarioSchema>["npcs"][0];
   },
   router: OpenAI,
 ) => {
   const { conversationHistory, npc } = requestBody;
 
-  if (!conversationHistory || !npc) {
-    return {
-      statusCode: 400,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        message:
-          "Parâmetros 'conversationHistory' ou 'npc' ausentes para a ação 'generateNpcResponse'.",
-      }),
-    };
-  }
-
   const systemPrompt =
-    `Você é ${npc.nome_completo_npc}, ${npc.cargo_funcao_npc_e_relacao_com_equipe}. ${npc.prompt_diretriz_para_ia_roleplay_npc}. Responda como se estivesse no meio da conversa. Seja conciso e responda em português (Brasil). Mantenha a resposta em uma ou duas frases, a menos que a situação exija mais detalhes.`;
+    `Você é ${npc.name}, ${npc.role}. ${npc.background}. Responda como se estivesse no meio da conversa. Seja conciso e responda em português (Brasil). Mantenha a resposta em uma ou duas frases, a menos que a situação exija mais detalhes.`;
 
   const chatCompletion = await router.chat.completions.create({
     model: "inception/mercury",
