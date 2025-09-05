@@ -36,8 +36,7 @@ export const collectListener = async (
       return;
     }
 
-    const scenarioTitle = scenario.titulo_cenario ||
-      "Cenário de Simulação";
+    const scenarioTitle = "Cenário de Simulação";
 
     const baseChannelName = `sessao-${commandInteraction.user.username}`
       .toLowerCase()

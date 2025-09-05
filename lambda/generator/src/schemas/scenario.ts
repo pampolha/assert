@@ -1,36 +1,26 @@
 import { z } from "npm:zod@^4.0.15";
 
 export const scenarioSchema = z.object({
-  titulo_cenario: z.string(),
-  lore_do_mundo_corporativo: z.object({
-    nome_empresa: z.string(),
-    cultura_organizacional_e_valores: z.string(),
-    historico_relevante_empresa: z.string(),
-    projeto_central_nome_e_visao: z.string(),
-    estado_atual_do_projeto_e_desafios: z.string(),
+  corporate: z.object({
+    company_name: z.string().min(1, "Company name is required"),
+    company_history: z.string().min(1, "Company history is required"),
+    current_project: z.string().min(1, "Current project description is required"),
   }),
-  o_incidente_critico_narrativa_detalhada: z.string(),
-  dramatis_personae_jogaveis: z.array(
+  challenge: z.string().min(1, "Challenge description is required"),
+  characters: z.array(
     z.object({
-      nome_completo_personagem: z.string(),
-      cargo_funcao_detalhado: z.string(),
-      background_e_personalidade_narrativa: z.string(),
-      objetivos_pessoais_na_situacao: z.array(z.string()),
-      informacao_privilegiada_ou_segredo_narrativo: z.string(),
+      name: z.string().min(1, "Character name is required"),
+      role: z.string().min(1, "Character role is required"),
+      background: z.string().min(1, "Character background is required"),
+      ace: z.string().min(1, "Character ace is required"),
     }),
-  ),
-  entidades_interativas_nao_jogaveis_ia: z.array(
+  ).length(4, "Exactly 4 characters are required"),
+  npcs: z.array(
     z.object({
-      nome_completo_npc: z.string(),
-      cargo_funcao_npc_e_relacao_com_equipe: z.string(),
-      perfil_psicologico_e_historico_npc_narrativa: z.string(),
-      modus_operandi_comunicacional_npc: z.string(),
-      gatilho_e_mensagem_de_entrada_em_cena_npc: z.string(),
-      prompt_diretriz_para_ia_roleplay_npc: z.string(),
+      name: z.string().min(1, "NPC name is required"),
+      role: z.string().min(1, "NPC role is required"),
+      background: z.string().min(1, "NPC background is required"),
     }),
-  ),
-  missao_principal_da_equipe_na_simulacao: z.string(),
-  arcos_de_decisao_e_consequencias_potenciais: z.array(z.string()),
-  soft_skills_centrais_em_jogo: z.array(z.string()),
-  artefatos_ou_recursos_disponiveis_no_cenario: z.array(z.string()),
+  ).min(1, "At least 1 NPC is required"),
+  objective: z.string().min(1, "Objective is required"),
 });

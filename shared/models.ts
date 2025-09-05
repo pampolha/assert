@@ -85,88 +85,44 @@ const schema = {
     },
     Scenario: {
       scenarioId: { type: String, required: true },
-      titulo_cenario: { type: String, required: true },
-      lore_do_mundo_corporativo: {
+      corporate: {
         type: Object,
         required: true,
         schema: {
-          nome_empresa: { type: String, required: true },
-          cultura_organizacional_e_valores: { type: String, required: true },
-          historico_relevante_empresa: { type: String, required: true },
-          projeto_central_nome_e_visao: { type: String, required: true },
-          estado_atual_do_projeto_e_desafios: { type: String, required: true },
+          company_name: { type: String, required: true },
+          company_history: { type: String, required: true },
+          current_project: { type: String, required: true },
         },
       },
-      o_incidente_critico_narrativa_detalhada: { type: String, required: true },
-      dramatis_personae_jogaveis: {
+      challenge: { type: String, required: true },
+      characters: {
         type: Array,
         required: true,
         items: {
           type: Object,
           required: true,
           schema: {
-            nome_completo_personagem: { type: String, required: true },
-            cargo_funcao_detalhado: { type: String, required: true },
-            background_e_personalidade_narrativa: {
-              type: String,
-              required: true,
-            },
-            objetivos_pessoais_na_situacao: {
-              type: Array,
-              required: true,
-              items: { type: String, required: true },
-            },
-            informacao_privilegiada_ou_segredo_narrativo: {
-              type: String,
-              required: true,
-            },
+            name: { type: String, required: true },
+            role: { type: String, required: true },
+            background: { type: String, required: true },
+            ace: { type: String, required: true },
           },
         },
       },
-      entidades_interativas_nao_jogaveis_ia: {
+      npcs: {
         type: Array,
         required: true,
         items: {
           type: Object,
           required: true,
           schema: {
-            nome_completo_npc: { type: String, required: true },
-            cargo_funcao_npc_e_relacao_com_equipe: {
-              type: String,
-              required: true,
-            },
-            perfil_psicologico_e_historico_npc_narrativa: {
-              type: String,
-              required: true,
-            },
-            modus_operandi_comunicacional_npc: { type: String, required: true },
-            gatilho_e_mensagem_de_entrada_em_cena_npc: {
-              type: String,
-              required: true,
-            },
-            prompt_diretriz_para_ia_roleplay_npc: {
-              type: String,
-              required: true,
-            },
+            name: { type: String, required: true },
+            role: { type: String, required: true },
+            background: { type: String, required: true },
           },
         },
       },
-      missao_principal_da_equipe_na_simulacao: { type: String, required: true },
-      arcos_de_decisao_e_consequencias_potenciais: {
-        type: Array,
-        required: true,
-        items: { type: String, required: true },
-      },
-      soft_skills_centrais_em_jogo: {
-        type: Array,
-        required: true,
-        items: { type: String, required: true },
-      },
-      artefatos_ou_recursos_disponiveis_no_cenario: {
-        type: Array,
-        required: true,
-        items: { type: String, required: true },
-      },
+      objective: { type: String, required: true },
       PK: { type: String, value: "SCENARIO#${scenarioId}" },
       SK: { type: String, value: "SCENARIO" },
       GS1PK: { type: String, value: "SCENARIO" },
