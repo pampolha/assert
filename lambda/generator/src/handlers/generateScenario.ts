@@ -1,13 +1,14 @@
 import type { OpenAI } from "openai";
 import generatorPrompt from "../prompts/scenario.ts";
 import { scenarioSchema } from "../schemas/scenario.ts";
+import { ScenarioModel } from "../../../../shared/models.ts";
 import z from "zod";
 
 export const handleGenerateScenario = async (
   router: OpenAI,
 ) => {
   const response = await router.chat.completions.create({
-    model: "deepseek/deepseek-r1-0528",
+    model: "deepseek/deepseek-chat-v3.1",
     messages: [
       { role: "system", content: `${crypto.randomUUID()}\n${generatorPrompt}` },
       {
@@ -28,7 +29,7 @@ export const handleGenerateScenario = async (
   const generatedContent = response.choices[0].message.content;
 
   if (!generatedContent) {
-    console.error("Cenário gerado é nulo ou vazio.");
+    console.error("Empty model response");
     return {
       statusCode: 500,
       body: JSON.stringify({ message: "Erro: Cenário gerado vazio." }),
@@ -40,30 +41,37 @@ export const handleGenerateScenario = async (
     const parsedContent = scenarioSchema.safeParse(parsedData);
 
     if (!parsedContent.success) {
-      console.error("Cenário gerado não corresponde ao schema definido:", parsedContent.error);
+      console.error(
+        parsedContent.error,
+      );
       return {
         statusCode: 500,
         body: JSON.stringify({
           message: "Erro: Cenário gerado não corresponde ao schema definido.",
-          error: parsedContent.error.format()
+          error: parsedContent.error.format(),
         }),
       };
     }
 
-    console.log("Cenário gerado:", parsedContent.data);
+    console.log({ parsedData: parsedContent.data });
+
+    await ScenarioModel.create({
+      scenarioId: crypto.randomUUID(),
+      ...parsedContent.data,
+    });
 
     return {
       statusCode: 200,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(parsedContent.data),
     };
   } catch (parseError) {
-    console.error("Erro ao parsear conteúdo gerado:", parseError);
+    console.error(parseError);
     return {
       statusCode: 500,
       body: JSON.stringify({
         message: "Erro: Falha ao processar cenário gerado.",
-        error: parseError instanceof Error ? parseError.message : "Erro desconhecido"
+        error: parseError instanceof Error
+          ? parseError.message
+          : "Erro desconhecido",
       }),
     };
   }

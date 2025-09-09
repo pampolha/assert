@@ -1,6 +1,6 @@
 import { type Entity, type OneSchema, Table } from "npm:dynamodb-onetable";
 import { DynamoDBClient } from "npm:@aws-sdk/client-dynamodb";
-import { awsAccessKeyId, awsRegion, awsSecretAccessKey } from "./env.ts";
+import { awsAccessKeyId, awsRegion, awsSecretAccessKey } from "../src/env.ts";
 
 const client = new DynamoDBClient({
   credentials: {

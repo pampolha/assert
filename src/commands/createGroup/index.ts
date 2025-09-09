@@ -6,7 +6,7 @@ import {
   SlashCommandBuilder,
 } from "discord.js";
 import type { BotCommand } from "../../types/discord-slash-commands.ts";
-import { mainChannelId } from "../../../shared/env.ts";
+import { mainChannelId } from "../../env.ts";
 import { collectListener, endListener } from "./collectorListeners.ts";
 import {
   ScenarioModel,

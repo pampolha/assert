@@ -1,6 +1,6 @@
 import type { Message } from "discord.js";
 import axios from "axios";
-import { generatorApiGatewayUrl } from "../shared/env.ts";
+import { generatorApiGatewayUrl } from "./env.ts";
 import {
   type ScenarioEntity,
   ScenarioModel,
