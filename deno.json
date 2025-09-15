@@ -8,13 +8,11 @@
     "deploy-commands-global": "deno run --allow-all src/deployCommands.ts",
     "deploy-commands-debug": "deno run --allow-all src/deployCommands.ts --debug",
     "dev": "deno run --watch --allow-all src/index.ts",
-    "generate-scenario": "deno run --allow-net --allow-env --allow-read --allow-sys --env-file=.env scripts/generateScenario.ts"
   },
   "imports": {
     "@aws-sdk/client-dynamodb": "npm:@aws-sdk/client-dynamodb@^3.848.0",
     "axios": "npm:axios@^1.10.0",
     "discord.js": "npm:discord.js@^14.21.0",
-    "dotenv": "npm:dotenv@^17.2.0",
     "dynamodb-onetable": "npm:dynamodb-onetable@^2.7.7"
   },
   "license": "CC-BY-NC-ND-4.0",

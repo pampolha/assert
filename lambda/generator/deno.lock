@@ -4,6 +4,7 @@
     "jsr:@openai/openai@^5.12.1": "5.12.1",
     "npm:@aws-sdk/client-dynamodb@*": "3.848.0",
     "npm:@types/node@*": "22.15.15",
+    "npm:dotenv@^17.2.2": "17.2.2",
     "npm:dynamodb-onetable@*": "2.7.7_@aws-sdk+client-dynamodb@3.848.0",
     "npm:zod@3": "3.25.76",
     "npm:zod@^4.0.15": "4.0.15"
@@ -815,6 +816,9 @@
         "@aws-sdk/util-dynamodb"
       ]
     },
+    "dotenv@17.2.2": {
+      "integrity": "sha512-Sf2LSQP+bOlhKWWyhFsn0UsfdK/kCWRv1iuA2gXAwt3dyNabr6QSj00I2V10pidqz69soatm9ZwZvpQMTIOd5Q=="
+    },
     "dynamodb-onetable@2.7.7_@aws-sdk+client-dynamodb@3.848.0": {
       "integrity": "sha512-yugIXk9XO1mnwKyqIuPnIQMg0uXaE6p/dNjEcxVePPnwjaAL+iHxnJ33dv8a//Q1Tug/qbeduaZDpUYjlTyKLw==",
       "dependencies": [
@@ -995,6 +999,7 @@
   "workspace": {
     "dependencies": [
       "jsr:@openai/openai@^5.12.1",
+      "npm:dotenv@^17.2.2",
       "npm:zod@^4.0.15"
     ]
   }

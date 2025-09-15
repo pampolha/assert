@@ -4,7 +4,9 @@ import { handleGenerateNpcResponse } from "./handlers/generateNpcResponse.ts";
 import type z from "zod";
 import type { scenarioSchema } from "./schemas/scenario.ts";
 import process from "node:process";
+import dotenv from "dotenv";
 
+dotenv.config();
 export const getOrThrow = (key: string): string => {
   const attemptedValue = process.env[key];
   if (!attemptedValue) {
@@ -22,7 +24,7 @@ const openrouter = new OpenAI({
 
 export const handler = (event: Record<string, unknown>) => {
   try {
-    console.log("Evento recebido:", JSON.stringify(event));
+    console.log("event:", JSON.stringify(event));
 
     let requestBody: {
       action: string;
@@ -32,7 +34,7 @@ export const handler = (event: Record<string, unknown>) => {
     try {
       requestBody = JSON.parse(event.body as string);
     } catch (parseError) {
-      console.error("Erro ao parsear o corpo da requisição:", parseError);
+      console.error("error on event body parse :", parseError);
       return {
         statusCode: 400,
         headers: { "Content-Type": "application/json" },
@@ -71,7 +73,7 @@ export const handler = (event: Record<string, unknown>) => {
         };
     }
   } catch (error) {
-    console.error("Erro na função Lambda:", error);
+    console.error("lambda error:", error);
     return {
       statusCode: 500,
       headers: { "Content-Type": "application/json" },

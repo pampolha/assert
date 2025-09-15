@@ -1,4 +1,4 @@
-import { z } from "npm:zod@^4.0.15";
+import { z } from "zod";
 
 export const scenarioSchema = z.object({
   corporate: z.object({

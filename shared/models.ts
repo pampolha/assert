@@ -1,6 +1,18 @@
 import { type Entity, type OneSchema, Table } from "npm:dynamodb-onetable";
 import { DynamoDBClient } from "npm:@aws-sdk/client-dynamodb";
-import { awsAccessKeyId, awsRegion, awsSecretAccessKey } from "../src/env.ts";
+import process from "node:process";
+
+const getOrThrow = (key: string): string => {
+  const attemptedValue = process.env[key];
+  if (!attemptedValue) {
+    throw new Error(`Could not get environment variable ${key}`);
+  }
+  return attemptedValue;
+};
+
+const awsAccessKeyId = getOrThrow("AWS_ACCESS_KEY_ID");
+const awsSecretAccessKey = getOrThrow("AWS_SECRET_ACCESS_KEY");
+const awsRegion = getOrThrow("AWS_REGION");
 
 const client = new DynamoDBClient({
   credentials: {

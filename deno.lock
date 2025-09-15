@@ -7,7 +7,6 @@
     "npm:@types/node@*": "22.15.15",
     "npm:axios@^1.10.0": "1.10.0",
     "npm:discord.js@^14.21.0": "14.21.0",
-    "npm:dotenv@^17.2.0": "17.2.0",
     "npm:dynamodb-onetable@*": "2.7.7_@aws-sdk+client-dynamodb@3.848.0",
     "npm:dynamodb-onetable@^2.7.7": "2.7.7_@aws-sdk+client-dynamodb@3.848.0",
     "npm:zlib-sync@*": "0.1.10",
@@ -942,9 +941,6 @@
         "undici"
       ]
     },
-    "dotenv@17.2.0": {
-      "integrity": "sha512-Q4sgBT60gzd0BB0lSyYD3xM4YxrXA9y4uBDof1JNYGzOXrQdQ6yX+7XIAqoFOGQFOTK1D3Hts5OllpxMDZFONQ=="
-    },
     "dunder-proto@1.0.1": {
       "integrity": "sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==",
       "dependencies": [
@@ -1277,7 +1273,6 @@
       "npm:@aws-sdk/client-dynamodb@^3.848.0",
       "npm:axios@^1.10.0",
       "npm:discord.js@^14.21.0",
-      "npm:dotenv@^17.2.0",
       "npm:dynamodb-onetable@^2.7.7"
     ]
   }
