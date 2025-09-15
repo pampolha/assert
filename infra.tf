@@ -49,6 +49,9 @@ resource "aws_lambda_function" "generator" {
   environment {
     variables = {
       OPENROUTER_API_KEY = var.openrouter_api_key
+      AWS_ACCESS_KEY_ID = var.aws_access_key_id
+      AWS_SECRET_ACCESS_KEY = var.aws_secret_access_key
+      AWS_REGION = var.aws_region
     }
   }
 }
@@ -173,9 +176,22 @@ resource "aws_dynamodb_table" "single_table" {
 }
 
 variable "openrouter_api_key" {
-  description = "A chave da API do roteador OpenRouter para a função Lambda."
   type        = string
-  sensitive   = true                                                                                                                                  
+  sensitive   = true                        
+}
+
+variable "aws_access_key_id" {
+  type = string
+  sensitive = true
+}
+
+variable "aws_secret_access_key" {
+  type = string
+  sensitive = true
+}
+
+variable "aws_region" {
+  type = string
 }
 
 output "api_gateway_url" {
