@@ -1,9 +1,5 @@
-import dotenv from "dotenv";
-import process from "node:process";
-dotenv.config();
-
 const getOrThrow = (key: string): string => {
-  const attemptedValue = process.env[key];
+  const attemptedValue = Deno.env.get(key);
   if (!attemptedValue) {
     throw new Error(`Could not get environment variable ${key}`);
   }

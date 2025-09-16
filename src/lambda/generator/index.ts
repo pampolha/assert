@@ -3,26 +3,16 @@ import { handleGenerateScenario } from "./handlers/generateScenario.ts";
 import { handleGenerateNpcResponse } from "./handlers/generateNpcResponse.ts";
 import type z from "zod";
 import type { scenarioSchema } from "./schemas/scenario.ts";
-import process from "node:process";
-
-export const getOrThrow = (key: string): string => {
-  const attemptedValue = process.env[key];
-  if (!attemptedValue) {
-    throw new Error(`Could not get environment variable ${key}`);
-  }
-  return attemptedValue;
-};
-
-const openrouterKey = getOrThrow("OPENROUTER_API_KEY");
+import { openrouterKey } from "../../env.ts";
 
 const openrouter = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
   apiKey: openrouterKey,
 });
 
-export const handler = (event: Record<string, unknown>) => {
+export const handler = async (event: Record<string, unknown>) => {
   try {
-    console.log("Evento recebido:", JSON.stringify(event));
+    console.log("event:", JSON.stringify(event));
 
     let requestBody: {
       action: string;
@@ -32,7 +22,7 @@ export const handler = (event: Record<string, unknown>) => {
     try {
       requestBody = JSON.parse(event.body as string);
     } catch (parseError) {
-      console.error("Erro ao parsear o corpo da requisição:", parseError);
+      console.error("error on event body parse :", parseError);
       return {
         statusCode: 400,
         headers: { "Content-Type": "application/json" },
@@ -44,7 +34,7 @@ export const handler = (event: Record<string, unknown>) => {
 
     switch (action) {
       case "generateScenario":
-        return handleGenerateScenario(openrouter);
+        return await handleGenerateScenario(openrouter);
 
       case "generateNpcResponse":
         if (!requestBody.conversationHistory || !requestBody.npc) {
@@ -57,7 +47,7 @@ export const handler = (event: Record<string, unknown>) => {
             }),
           };
         }
-        return handleGenerateNpcResponse({
+        return await handleGenerateNpcResponse({
           action,
           conversationHistory: requestBody.conversationHistory,
           npc: requestBody.npc,
@@ -71,7 +61,7 @@ export const handler = (event: Record<string, unknown>) => {
         };
     }
   } catch (error) {
-    console.error("Erro na função Lambda:", error);
+    console.error("lambda error:", error);
     return {
       statusCode: 500,
       headers: { "Content-Type": "application/json" },
@@ -82,3 +72,27 @@ export const handler = (event: Record<string, unknown>) => {
     };
   }
 };
+
+if (import.meta.main) {
+  const stdinContent = await new Promise<Uint8Array>((resolve) => {
+    const chunks: Uint8Array[] = [];
+    Deno.stdin.readable.pipeTo(
+      new WritableStream({
+        write(chunk) {
+          chunks.push(chunk);
+        },
+        close() {
+          resolve(
+            new Uint8Array(chunks.reduce<number[]>((acc, val) => {
+              acc.push(...val);
+              return acc;
+            }, [])),
+          );
+        },
+      }),
+    );
+  });
+  const event = JSON.parse(new TextDecoder().decode(stdinContent));
+  const response = await handler(event);
+  console.log(JSON.stringify(response));
+}

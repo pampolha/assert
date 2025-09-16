@@ -7,11 +7,12 @@
     "npm:@types/node@*": "22.15.15",
     "npm:axios@^1.10.0": "1.10.0",
     "npm:discord.js@^14.21.0": "14.21.0",
-    "npm:dotenv@^17.2.0": "17.2.0",
     "npm:dynamodb-onetable@*": "2.7.7_@aws-sdk+client-dynamodb@3.848.0",
     "npm:dynamodb-onetable@^2.7.7": "2.7.7_@aws-sdk+client-dynamodb@3.848.0",
+    "npm:openai@^5.20.2": "5.20.2_zod@4.0.15",
     "npm:zlib-sync@*": "0.1.10",
-    "npm:zod@^4.0.15": "4.0.15"
+    "npm:zod@^4.0.15": "4.0.15",
+    "npm:zod@^4.1.8": "4.1.8"
   },
   "jsr": {
     "@openai/openai@5.12.1": {
@@ -942,9 +943,6 @@
         "undici"
       ]
     },
-    "dotenv@17.2.0": {
-      "integrity": "sha512-Q4sgBT60gzd0BB0lSyYD3xM4YxrXA9y4uBDof1JNYGzOXrQdQ6yX+7XIAqoFOGQFOTK1D3Hts5OllpxMDZFONQ=="
-    },
     "dunder-proto@1.0.1": {
       "integrity": "sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==",
       "dependencies": [
@@ -1084,6 +1082,16 @@
     "obliterator@1.6.1": {
       "integrity": "sha512-9WXswnqINnnhOG/5SLimUlzuU1hFJUc8zkwyD59Sd+dPOMf05PmnYG/d6Q7HZ+KmgkZJa1PxRso6QdM3sTNHig=="
     },
+    "openai@5.20.2_zod@4.0.15": {
+      "integrity": "sha512-ZeBIEazj6W/XOulMw92L8iU5FblQeM5IxjPRCZNVArNXsoF+bLPnS7B2X4O0JSmpCM+F5Gdajr6bn4nAUj4LFQ==",
+      "dependencies": [
+        "zod@4.0.15"
+      ],
+      "optionalPeers": [
+        "zod@4.0.15"
+      ],
+      "bin": true
+    },
     "proxy-from-env@1.1.0": {
       "integrity": "sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg=="
     },
@@ -1118,6 +1126,9 @@
     },
     "zod@4.0.15": {
       "integrity": "sha512-2IVHb9h4Mt6+UXkyMs0XbfICUh1eUrlJJAOupBHUhLRnKkruawyDddYRCs0Eizt900ntIMk9/4RksYl+FgSpcQ=="
+    },
+    "zod@4.1.8": {
+      "integrity": "sha512-5R1P+WwQqmmMIEACyzSvo4JXHY5WiAFHRMg+zBZKgKS+Q1viRa0C1hmUKtHltoIFKtIdki3pRxkmpP74jnNYHQ=="
     }
   },
   "redirects": {
@@ -1277,8 +1288,9 @@
       "npm:@aws-sdk/client-dynamodb@^3.848.0",
       "npm:axios@^1.10.0",
       "npm:discord.js@^14.21.0",
-      "npm:dotenv@^17.2.0",
-      "npm:dynamodb-onetable@^2.7.7"
+      "npm:dynamodb-onetable@^2.7.7",
+      "npm:openai@^5.20.2",
+      "npm:zod@^4.1.8"
     ]
   }
 }

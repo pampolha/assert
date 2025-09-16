@@ -6,8 +6,8 @@ import {
 import path from "node:path";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
-import type { BotCommand } from "./types/discord-slash-commands.ts";
-import { botClientId, botToken, debugGuildId } from "../shared/env.ts";
+import type { BotCommand } from "../types/discord-slash-commands.ts";
+import { botClientId, botToken, debugGuildId } from "../env.ts";
 import process from "node:process";
 
 const isDebugDeployment = process.argv.includes("--debug");

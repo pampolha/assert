@@ -1,11 +1,12 @@
-import { type Entity, type OneSchema, Table } from "npm:dynamodb-onetable";
-import { DynamoDBClient } from "npm:@aws-sdk/client-dynamodb";
-import { awsAccessKeyId, awsRegion, awsSecretAccessKey } from "./env.ts";
+import { type Entity, type OneSchema, Table } from "dynamodb-onetable";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { awsAccessKeyId, awsRegion, awsSecretAccessKey } from "../env.ts";
 
 const client = new DynamoDBClient({
   credentials: {
     accessKeyId: awsAccessKeyId,
     secretAccessKey: awsSecretAccessKey,
+    sessionToken: Deno.env.get("AWS_SESSION_TOKEN"),
   },
   region: awsRegion,
 });

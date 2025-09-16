@@ -8,7 +8,7 @@ import type { ButtonInteraction } from "discord.js";
 import {
   SessionFeedbackModel,
   type SessionParticipantEntity,
-} from "../../../shared/models.ts";
+} from "../../table/models.ts";
 import { EmbedBuilder } from "discord.js";
 import { Colors } from "discord.js";
 

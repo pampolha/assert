@@ -30,14 +30,14 @@ export const handleGenerateNpcResponse = async (
   const npcResponse = chatCompletion.choices[0].message?.content;
 
   if (!npcResponse) {
-    console.error("Resposta do NPC gerada é nula ou vazia.");
+    console.error("npc response is empty.");
     return {
       statusCode: 500,
       body: JSON.stringify({ message: "Erro: Resposta do NPC vazia." }),
     };
   }
 
-  console.log("Resposta do NPC gerada:", npcResponse);
+  console.log("npc response:", npcResponse);
 
   return {
     statusCode: 200,

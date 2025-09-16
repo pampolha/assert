@@ -8,14 +8,16 @@
     "deploy-commands-global": "deno run --allow-all src/deployCommands.ts",
     "deploy-commands-debug": "deno run --allow-all src/deployCommands.ts --debug",
     "dev": "deno run --watch --allow-all src/index.ts",
-    "generate-scenario": "deno run --allow-net --allow-env --allow-read --allow-sys --env-file=.env scripts/generateScenario.ts"
+    "build-generator": "deno compile --env-file --allow-all --target x86_64-unknown-linux-gnu --output generator src/lambda/generator/index.ts && cp src/scripts/executeGenerator.js index.js && echo '{\"type\": \"commonjs\"}' > package.json && zip -X -D -9 -r -u assert-generator-payload.zip generator index.js package.json && rm generator index.js package.json",
+    "generate-scenario": "echo 'import { handler } from \"./lambda/generator/index.ts\"; Deno.serve({ port: 8123 }, async (req) => handler({body: await req.text()}));' > src/local.js && bash -c 'deno run -A --env-file src/local.js & PID=$!; sleep 3; curl -H \"Content-Type: application/json\" --data \"{\\\"action\\\": \\\"generateScenario\\\"}\" 127.0.0.1:8123; rm src/local.js; if [ -n \"$PID\" ]; then kill $PID; fi'"
   },
   "imports": {
     "@aws-sdk/client-dynamodb": "npm:@aws-sdk/client-dynamodb@^3.848.0",
     "axios": "npm:axios@^1.10.0",
     "discord.js": "npm:discord.js@^14.21.0",
-    "dotenv": "npm:dotenv@^17.2.0",
-    "dynamodb-onetable": "npm:dynamodb-onetable@^2.7.7"
+    "dynamodb-onetable": "npm:dynamodb-onetable@^2.7.7",
+    "openai": "npm:openai@^5.20.2",
+    "zod": "npm:zod@^4.1.8"
   },
   "license": "CC-BY-NC-ND-4.0",
   "nodeModulesDir": "auto"

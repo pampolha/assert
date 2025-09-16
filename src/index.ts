@@ -9,8 +9,8 @@ import path from "node:path";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import type { BotCommand } from "./types/discord-slash-commands.ts";
-import { botToken, mainChannelId } from "../shared/env.ts";
-import { handleNpcMention } from "./npcInteractionHandler.ts";
+import { botToken, mainChannelId } from "./env.ts";
+import { handleNpcMention } from "./middleware/npcInteractionHandler.ts";
 
 const client = new Client({
   intents: [

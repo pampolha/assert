@@ -9,8 +9,8 @@ import type { BotCommand } from "../../types/discord-slash-commands.ts";
 import {
   SessionModel,
   SessionParticipantModel,
-} from "../../../shared/models.ts";
-import { mainChannelId } from "../../../shared/env.ts";
+} from "../../table/models.ts";
+import { mainChannelId } from "../../env.ts";
 import { collectListener, endListener } from "./collectorListeners.ts";
 
 const command: BotCommand = {

@@ -32,6 +32,11 @@ resource "aws_iam_role_policy_attachment" "lambda_logs" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+resource "aws_iam_role_policy_attachment" "lambda_dynamodb" {
+  role       = aws_iam_role.lambda_exec.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess_v2"
+}
+
 resource "aws_lambda_function" "generator" {
   filename         = "assert-generator-payload.zip"
   function_name    = "assert-generator"
@@ -45,6 +50,65 @@ resource "aws_lambda_function" "generator" {
     variables = {
       OPENROUTER_API_KEY = var.openrouter_api_key
     }
+  }
+}
+
+resource "aws_iam_role" "scheduler_exec" {
+  name = "scheduler_exec_role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = {
+          Service = "scheduler.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_policy" "scheduler_lambda_invoke" {
+  name = "scheduler_lambda_invoke_policy"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = "lambda:InvokeFunction"
+        Resource = aws_lambda_function.generator.arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "scheduler_lambda" {
+  role       = aws_iam_role.scheduler_exec.name
+  policy_arn = aws_iam_policy.scheduler_lambda_invoke.arn
+}
+
+resource "aws_scheduler_schedule" "generate_scenario" {
+  name       = "generate-scenario-schedule"
+  group_name = "default"
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  schedule_expression = "rate(24 hours)"
+
+  target {
+    arn      = aws_lambda_function.generator.arn
+    role_arn = aws_iam_role.scheduler_exec.arn
+
+    input = jsonencode({
+      FunctionName: aws_lambda_function.generator.arn,
+      InvocationType: "event",
+      Payload: jsonencode({
+        action: "generateScenario"
+      })
+    })
   }
 }
 
@@ -121,9 +185,8 @@ resource "aws_dynamodb_table" "single_table" {
 }
 
 variable "openrouter_api_key" {
-  description = "A chave da API do roteador OpenRouter para a função Lambda."
   type        = string
-  sensitive   = true                                                                                                                                  
+  sensitive   = true                        
 }
 
 output "api_gateway_url" {

@@ -2,7 +2,7 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import type {
   SessionEntity,
   SessionParticipantEntity,
-} from "../../../shared/models.ts";
+} from "../../table/models.ts";
 import type { Client } from "discord.js";
 import { collectListener } from "./feedbackCollectorListeners.ts";
 import type { ComponentType } from "discord.js";
