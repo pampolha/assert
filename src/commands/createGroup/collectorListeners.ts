@@ -11,7 +11,7 @@ import {
   SessionModel,
   type SessionParticipantEntity,
   SessionParticipantModel,
-} from "../../../shared/models.ts";
+} from "../../table/models.ts";
 
 const getUpdatedButtonRow = (
   { sessionMembers, groupMessageActionRow, collectorInteraction }: {

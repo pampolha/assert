@@ -1,12 +1,12 @@
 import type { Message } from "discord.js";
 import axios from "axios";
-import { generatorApiGatewayUrl } from "./env.ts";
+import { generatorApiGatewayUrl } from "../env.ts";
 import {
   type ScenarioEntity,
   ScenarioModel,
   SessionChannelModel,
   SessionModel,
-} from "../shared/models.ts";
+} from "../table/models.ts";
 import type { OmitPartialGroupDMChannel } from "discord.js";
 
 export const handleNpcMention = async (

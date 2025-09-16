@@ -5,7 +5,7 @@ import {
   type SessionEntity,
   SessionModel,
   SessionParticipantModel,
-} from "../../../shared/models.ts";
+} from "../../table/models.ts";
 import { sendFeedbackForms } from "./sendFeedbackForms.ts";
 
 export const collectListener = async (

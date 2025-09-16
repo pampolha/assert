@@ -9,7 +9,7 @@ import type { BotCommand } from "../../types/discord-slash-commands.ts";
 import {
   SessionModel,
   SessionParticipantModel,
-} from "../../../shared/models.ts";
+} from "../../table/models.ts";
 import { mainChannelId } from "../../env.ts";
 import { collectListener, endListener } from "./collectorListeners.ts";
 

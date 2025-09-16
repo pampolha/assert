@@ -49,9 +49,6 @@ resource "aws_lambda_function" "generator" {
   environment {
     variables = {
       OPENROUTER_API_KEY = var.openrouter_api_key
-      AWS_ACCESS_KEY_ID = var.aws_access_key_id
-      AWS_SECRET_ACCESS_KEY = var.aws_secret_access_key
-      AWS_REGION = var.aws_region
     }
   }
 }
@@ -59,24 +56,36 @@ resource "aws_lambda_function" "generator" {
 resource "aws_iam_role" "scheduler_exec" {
   name = "scheduler_exec_role"
   assume_role_policy = jsonencode({
-    Version: "2012-10-17",
-    Statement: [
-        {
-            Effect: "Allow",
-            Principal: {
-                Service: "scheduler.amazonaws.com"
-            },
-            Action: "sts:AssumeRole"
-        },
-        {
-            Action: [
-                "lambda:InvokeFunction"
-            ],
-            Effect: "Allow",
-            Resource: aws_lambda_function.generator.arn
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = {
+          Service = "scheduler.amazonaws.com"
         }
+        Action = "sts:AssumeRole"
+      }
     ]
   })
+}
+
+resource "aws_iam_policy" "scheduler_lambda_invoke" {
+  name = "scheduler_lambda_invoke_policy"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = "lambda:InvokeFunction"
+        Resource = aws_lambda_function.generator.arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "scheduler_lambda" {
+  role       = aws_iam_role.scheduler_exec.name
+  policy_arn = aws_iam_policy.scheduler_lambda_invoke.arn
 }
 
 resource "aws_scheduler_schedule" "generate_scenario" {
@@ -178,20 +187,6 @@ resource "aws_dynamodb_table" "single_table" {
 variable "openrouter_api_key" {
   type        = string
   sensitive   = true                        
-}
-
-variable "aws_access_key_id" {
-  type = string
-  sensitive = true
-}
-
-variable "aws_secret_access_key" {
-  type = string
-  sensitive = true
-}
-
-variable "aws_region" {
-  type = string
 }
 
 output "api_gateway_url" {

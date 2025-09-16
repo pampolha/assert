@@ -14,7 +14,7 @@ import {
   SessionModel,
   type SessionParticipantEntity,
   SessionParticipantModel,
-} from "../../../shared/models.ts";
+} from "../../table/models.ts";
 
 const command: BotCommand = {
   data: new SlashCommandBuilder()

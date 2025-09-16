@@ -1,7 +1,7 @@
 import type { OpenAI } from "openai";
 import generatorPrompt from "../prompts/scenario.ts";
 import { scenarioSchema } from "../schemas/scenario.ts";
-import { ScenarioModel } from "../../../../shared/models.ts";
+import { ScenarioModel } from "../../../../src/table/models.ts";
 import z from "zod";
 
 export const handleGenerateScenario = async (

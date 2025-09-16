@@ -6,7 +6,7 @@ import {
   type SessionEntity,
   SessionModel,
   type SessionParticipantEntity,
-} from "../../../shared/models.ts";
+} from "../../table/models.ts";
 
 export const collectListener = async (
   commandInteraction: CommandInteraction,
