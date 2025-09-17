@@ -5,7 +5,7 @@ import {
   ComponentType,
   SlashCommandBuilder,
 } from "discord.js";
-import type { BotCommand } from "../../types/discord-slash-commands.ts";
+import type { BotCommand } from "assert-bot"
 import {
   SessionModel,
   SessionParticipantModel,

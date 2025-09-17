@@ -8,9 +8,26 @@ import {
 import path from "node:path";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
-import type { BotCommand } from "./types/discord-slash-commands.ts";
 import { botToken, mainChannelId } from "./env.ts";
 import { handleNpcMention } from "./middleware/npcInteractionHandler.ts";
+import { ChannelType } from "discord.js";
+import type {
+  CommandInteraction,
+  Message,
+  SlashCommandBuilder,
+} from "discord.js";
+import type { TextChannel } from "discord.js";
+
+export type ValidNpcInteractionMessage = Message<true> & {
+  channel: TextChannel;
+};
+
+export interface BotCommand {
+  data:
+    | SlashCommandBuilder
+    | Omit<SlashCommandBuilder, "addSubcommand" | "addSubcommandGroup">;
+  execute: (interaction: CommandInteraction) => Promise<void>;
+}
 
 const client = new Client({
   intents: [
@@ -96,16 +113,17 @@ client.on(Events.InteractionCreate, async (interaction) => {
 });
 
 client.on(Events.MessageCreate, (message) => {
-  if (
-    !(
-      message.guild &&
-      message.channel.isTextBased() &&
-      message.channel.id !== mainChannelId &&
-      message.content.includes("@")
-    )
-  ) return;
+  const isValidMessage = (
+    msg: typeof message,
+  ): msg is ValidNpcInteractionMessage =>
+    msg.inGuild() &&
+    msg.channel.type === ChannelType.GuildText &&
+    msg.channel.id !== mainChannelId &&
+    msg.content.includes("@");
 
-  handleNpcMention(message);
+  if (isValidMessage(message)) {
+    handleNpcMention(message);
+  }
 });
 
 client.login(botToken);

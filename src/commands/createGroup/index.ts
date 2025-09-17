@@ -5,7 +5,7 @@ import {
   ComponentType,
   SlashCommandBuilder,
 } from "discord.js";
-import type { BotCommand } from "../../types/discord-slash-commands.ts";
+import type { BotCommand } from "assert-bot";
 import { mainChannelId } from "../../env.ts";
 import { collectListener, endListener } from "./collectorListeners.ts";
 import {
@@ -66,13 +66,13 @@ const command: BotCommand = {
       return;
     }
 
-    const latestScenario = await ScenarioModel.get({
+    const latestScenario = (await ScenarioModel.find({
       GS1PK: "SCENARIO",
     }, {
       index: "gs1",
       limit: 1,
       reverse: true,
-    });
+    })).at(0);
 
     if (!latestScenario) {
       await interaction.editReply({

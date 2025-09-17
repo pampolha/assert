@@ -5,13 +5,10 @@ import {
   ComponentType,
   SlashCommandBuilder,
 } from "discord.js";
-import type { BotCommand } from "../../types/discord-slash-commands.ts";
-import {
-  SessionModel,
-  SessionParticipantModel,
-} from "../../table/models.ts";
+import { SessionModel, SessionParticipantModel } from "../../table/models.ts";
 import { mainChannelId } from "../../env.ts";
 import { collectListener, endListener } from "./collectorListeners.ts";
+import type { BotCommand } from "assert-bot";
 
 const command: BotCommand = {
   data: new SlashCommandBuilder()

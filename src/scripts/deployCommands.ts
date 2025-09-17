@@ -6,7 +6,7 @@ import {
 import path from "node:path";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
-import type { BotCommand } from "../types/discord-slash-commands.ts";
+import type { BotCommand } from "assert-bot";
 import { botClientId, botToken, debugGuildId } from "../env.ts";
 import process from "node:process";
 

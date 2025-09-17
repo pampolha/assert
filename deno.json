@@ -4,10 +4,10 @@
   "description": "Assert bot dependencies",
   "exports": "./src/index.ts",
   "tasks": {
-    "start": "deno run --allow-all src/index.ts",
-    "deploy-commands-global": "deno run --allow-all src/deployCommands.ts",
-    "deploy-commands-debug": "deno run --allow-all src/deployCommands.ts --debug",
-    "dev": "deno run --watch --allow-all src/index.ts",
+    "start": "deno run --allow-all --env-file src/index.ts",
+    "deploy-commands-global": "deno run --allow-all --env-file src/deployCommands.ts",
+    "deploy-commands-debug": "deno run --allow-all --env-file src/deployCommands.ts --debug",
+    "dev": "deno run --watch --allow-all --env-file src/index.ts",
     "build-generator": "deno compile --env-file --allow-all --target x86_64-unknown-linux-gnu --output generator src/lambda/generator/index.ts && cp src/scripts/executeGenerator.js index.js && echo '{\"type\": \"commonjs\"}' > package.json && zip -X -D -9 -r -u assert-generator-payload.zip generator index.js package.json && rm generator index.js package.json",
     "generate-scenario": "echo 'import { handler } from \"./lambda/generator/index.ts\"; Deno.serve({ port: 8123 }, async (req) => handler({body: await req.text()}));' > src/local.js && bash -c 'deno run -A --env-file src/local.js & PID=$!; sleep 3; curl -H \"Content-Type: application/json\" --data \"{\\\"action\\\": \\\"generateScenario\\\"}\" 127.0.0.1:8123; rm src/local.js; if [ -n \"$PID\" ]; then kill $PID; fi'"
   },

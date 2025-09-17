@@ -1,47 +1,54 @@
 import type { OpenAI } from "openai";
-import type { scenarioSchema } from "../schemas/scenario.ts";
-import type { z } from "zod";
+import type { NpcResponsePayload } from "../../../schemas/npcResponse.ts";
+import { WebhookClient } from "discord.js";
 
 export const handleGenerateNpcResponse = async (
-  requestBody: {
-    action: string;
-    conversationHistory: string;
-    npc: z.output<typeof scenarioSchema>["npcs"][0];
-  },
+  requestBody: NpcResponsePayload,
   router: OpenAI,
 ) => {
-  const { conversationHistory, npc } = requestBody;
+  const { conversationHistory, scenario, npc, webhookData } = requestBody;
+  let webhook: WebhookClient | undefined;
 
-  const systemPrompt =
-    `Você é ${npc.name}, ${npc.role}. ${npc.background}. Responda como se estivesse no meio da conversa. Seja conciso e responda em português (Brasil). Mantenha a resposta em uma ou duas frases, a menos que a situação exija mais detalhes.`;
+  try {
+    webhook = new WebhookClient(webhookData);
+    const formattedHistory = conversationHistory.map((msg) =>
+      `${msg.username} said: "${msg.content}"`
+    ).join("\n");
 
-  const chatCompletion = await router.chat.completions.create({
-    model: "inception/mercury",
-    messages: [
-      { role: "system", content: systemPrompt },
-      {
-        role: "user",
-        content:
-          `Histórico da conversa:\n${conversationHistory}\n\nSua resposta:`,
-      },
-    ],
-  });
+    const systemPrompt =
+      `You are ${npc.name}, ${npc.role}. ${npc.background}. The overall scenario data is ${scenario}. Answer the messages which "mention" you with the '@' symbol (e.g.: "@Mark what is going on?"). Ignore topics that seem unrelated to an objective end, which is problem resolution. Keep your answer concise and meaningful. When you are done writing your answer, translate it to Brazilian Portuguese and send the translated text only. If you think there is no appropriate answer, return empty text.`;
 
-  const npcResponse = chatCompletion.choices[0].message?.content;
+    const chatCompletion = await router.chat.completions.create({
+      model: "openai/gpt-oss-20b:free",
+      messages: [
+        { role: "system", content: systemPrompt },
+        {
+          role: "user",
+          content: `Conversation history:\n${formattedHistory}\n\nYour answer:`,
+        },
+      ],
+    });
 
-  if (!npcResponse) {
-    console.error("npc response is empty.");
+    const npcResponse = chatCompletion.choices[0].message?.content;
+
+    if (!npcResponse) {
+      console.error("Resposta do NPC gerada é nula ou vazia.");
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ message: "Erro: Resposta do NPC vazia." }),
+      };
+    }
+
+    console.log("Resposta do NPC gerada:", npcResponse);
+
+    await webhook.send(npcResponse);
+
     return {
-      statusCode: 500,
-      body: JSON.stringify({ message: "Erro: Resposta do NPC vazia." }),
+      statusCode: 200,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ npcResponse }),
     };
+  } finally {
+    await webhook?.delete();
   }
-
-  console.log("npc response:", npcResponse);
-
-  return {
-    statusCode: 200,
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ npcResponse }),
-  };
 };
