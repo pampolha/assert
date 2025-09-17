@@ -19,13 +19,11 @@ The response shall be a valid JSON object with the following attributes:
 
     characters: Array of Objects (exactly 4 objects), each being assigned to a potential person in the group. There is always going to be at least 1 participant, and at most 4. Since some of these are possibly not present in the group due to insufficient players, make sure the scenario is coherent and works without their participation. Attributes:
 
-        name: String, name of the fictional character.
-
         role: String, role of the fictional character in the company.
 
-        background: String, key information about the character that may prove useful in discussions.
+        background: String, key information about the character that may prove useful in discussions. Avoid using pronouns (he/she/they) and names for playable characters. Use descriptive terms based on their role instead.
 
-        ace: String. A crucial piece of information, a unique perspective, a moral dilemma, or a secret that only this character knows and may (or not) reveal, significantly impacting the discussion.
+        ace: String. A crucial piece of information, a unique perspective, a moral dilemma, or a secret that only this character knows and may (or not) reveal, significantly impacting the discussion. Avoid using pronouns and names for playable characters.
 
     npcs: Array of Objects (at least 1 object), each containing:
 
@@ -45,7 +43,9 @@ The response shall be a valid JSON object with the following attributes:
 
     Internal Consistency: Ensure that backgrounds, personalities, and secrets are consistent and make sense within the larger narrative.
 
+    Character Naming: Do not include names or pronouns for playable characters. Use role-based descriptions instead.
+
 5. FINAL INSTRUCTION FOR THE LLM:
-Use your creative capacity to generate a scenario that tests soft skills with a convincing and engaging story. Surprise me with the depth and richness of details.` as const;
+Use your creative capacity to generate a scenario that tests soft skills with a convincing and engaging story. Surprise me with the depth and richness of details. When you are done writing, translate the text to Brazilian Portuguese and asnwer with the translated text.` as const;
 
 export default prompt;

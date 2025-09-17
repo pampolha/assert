@@ -1,5 +1,4 @@
 import type { ButtonInteraction, CommandInteraction } from "discord.js";
-import { ChannelType, PermissionFlagsBits } from "discord.js";
 import {
   ScenarioModel,
   SessionChannelModel,
@@ -7,17 +6,22 @@ import {
   SessionModel,
   type SessionParticipantEntity,
 } from "../../table/models.ts";
+import {
+  makeDmInstructions,
+  makeWelcomeMessageArray,
+} from "./onboardingTemplates.ts";
+import {
+  createCategory,
+  createTextChannel,
+  createVoiceChannel,
+} from "./channelCreation.ts";
 
 export const collectListener = async (
-  commandInteraction: CommandInteraction,
+  commandInteraction: CommandInteraction<"cached">,
   collectorInteraction: ButtonInteraction,
   session: SessionEntity,
   participants: SessionParticipantEntity[],
 ) => {
-  if (!commandInteraction.guild) {
-    return;
-  }
-
   if (collectorInteraction.customId === "confirm_start_session") {
     const userGroupMessages = commandInteraction.channel?.messages.cache.filter(
       (msg) =>
@@ -46,7 +50,8 @@ export const collectListener = async (
       return;
     }
 
-    const scenarioTitle = "Cenário de Simulação";
+    const scenarioTitle = scenario.corporate.company_name ??
+      "Cenário de Simulação";
 
     const baseChannelName = `sessao-${commandInteraction.user.username}`
       .toLowerCase()
@@ -55,100 +60,56 @@ export const collectListener = async (
 
     const participantIds = participants.map((part) => part.participantId);
 
-    const category = await commandInteraction.guild.channels.create({
-      name: `Sessão de Simulação - ${commandInteraction.user.username}`,
-      type: ChannelType.GuildCategory,
-      permissionOverwrites: [
-        {
-          id: commandInteraction.guild.id,
-          deny: [PermissionFlagsBits.ViewChannel],
-        },
-        ...participantIds.map((id) => ({
-          id,
-          allow: [PermissionFlagsBits.ViewChannel],
-        })),
-        {
-          id: commandInteraction.client.user!.id,
-          allow: [
-            PermissionFlagsBits.ViewChannel,
-            PermissionFlagsBits.ManageChannels,
-          ],
-        },
-      ],
-      reason:
-        `Nova sessão de simulação para ${commandInteraction.user.username}`,
-    });
+    const category = await createCategory(commandInteraction, participantIds);
 
+    const channelCreationInput = {
+      commandInteraction,
+      participantIds,
+      category,
+      baseChannelName,
+      scenarioTitle,
+    };
     const [textChannel, voiceChannel] = await Promise.all([
-      commandInteraction.guild.channels.create({
-        name: `${baseChannelName}-chat`,
-        type: ChannelType.GuildText,
-        parent: category.id,
-        permissionOverwrites: [
-          {
-            id: commandInteraction.guild.id,
-            deny: [PermissionFlagsBits.ViewChannel],
-          },
-          ...participantIds.map((id) => ({
-            id,
-            allow: [
-              PermissionFlagsBits.ViewChannel,
-              PermissionFlagsBits.SendMessages,
-              PermissionFlagsBits.ReadMessageHistory,
-            ],
-          })),
-          {
-            id: commandInteraction.client.user!.id,
-            allow: [
-              PermissionFlagsBits.ViewChannel,
-              PermissionFlagsBits.SendMessages,
-              PermissionFlagsBits.ReadMessageHistory,
-            ],
-          },
-        ],
-        topic: scenarioTitle,
-        reason:
-          `Canal de texto para a sessão de ${commandInteraction.user.username}`,
-      }),
-      commandInteraction.guild.channels.create({
-        name: `${baseChannelName}-voz`,
-        type: ChannelType.GuildVoice,
-        parent: category.id,
-        permissionOverwrites: [
-          {
-            id: commandInteraction.guild.id,
-            deny: [PermissionFlagsBits.ViewChannel],
-          },
-          ...participantIds.map((id) => ({
-            id,
-            allow: [
-              PermissionFlagsBits.ViewChannel,
-              PermissionFlagsBits.Connect,
-              PermissionFlagsBits.Speak,
-            ],
-          })),
-          {
-            id: commandInteraction.client.user!.id,
-            allow: [
-              PermissionFlagsBits.ViewChannel,
-              PermissionFlagsBits.Connect,
-              PermissionFlagsBits.Speak,
-            ],
-          },
-        ],
-        reason:
-          `Canal de voz para a sessão de ${commandInteraction.user.username}`,
-      }),
+      createTextChannel(channelCreationInput),
+      createVoiceChannel(channelCreationInput),
     ]);
 
+    const welcomeMessageArray = makeWelcomeMessageArray(scenario, participants);
+
+    const characterAssignments = participants.map((participant, index) => {
+      const character = scenario.characters[index % scenario.characters.length];
+      return { participant, character };
+    });
+
+    const sessionOwner = participants.find((p) => p.role === "owner");
+    const dmPromises = characterAssignments.map(
+      async ({ participant, character }) => {
+        try {
+          const user = await commandInteraction.client.users.fetch(
+            participant.participantId,
+          );
+          const dmInstructions = makeDmInstructions(
+            sessionOwner,
+            character,
+          );
+
+          await user.send(dmInstructions);
+        } catch (error) {
+          console.error(
+            `Failed to send DM to user ${participant.participantId}:`,
+            error,
+          );
+          await textChannel.send(
+            `<@${participant.participantId}> Não foi possível enviar mensagem privada. Verifique se você permite mensagens de membros do servidor nas configurações de privacidade.`,
+          );
+        }
+      },
+    );
+
     await Promise.all([
-      textChannel.send(
-        `Bem-vindo(a) à sua sessão de simulação!\n\n` +
-          `Este é o canal de texto privado para a sua simulação. O canal de voz é ${voiceChannel}.\n\n` +
-          `**Cenário:** ${scenarioTitle}\n` +
-          `**Participantes:** ${
-            participants.map((p) => `<@${p.participantId}>`).join(", ")
-          }`,
+      dmPromises,
+      Promise.all(
+        welcomeMessageArray.map((msg) => textChannel.send(msg)),
       ),
       SessionModel.update({
         sessionId: session.sessionId,

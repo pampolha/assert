@@ -103,7 +103,6 @@ const schema = {
           type: Object,
           required: true,
           schema: {
-            name: { type: String, required: true },
             role: { type: String, required: true },
             background: { type: String, required: true },
             ace: { type: String, required: true },

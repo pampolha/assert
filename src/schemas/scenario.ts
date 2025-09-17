@@ -12,7 +12,6 @@ export const scenarioSchema = z.object({
   challenge: z.string().min(1, "Challenge description is required"),
   characters: z.array(
     z.object({
-      name: z.string().min(1, "Character name is required"),
       role: z.string().min(1, "Character role is required"),
       background: z.string().min(1, "Character background is required"),
       ace: z.string().min(1, "Character ace is required"),

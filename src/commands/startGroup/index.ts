@@ -19,7 +19,7 @@ const command: BotCommand = {
 
   async execute(interaction) {
     if (
-      !interaction.guild ||
+      !interaction.inCachedGuild() ||
       interaction.channel?.id !== mainChannelId
     ) {
       await interaction.editReply({
