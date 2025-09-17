@@ -8,7 +8,6 @@ const getOrThrow = (key: string): string => {
 
 const botToken = getOrThrow("BOT_TOKEN");
 const botClientId = getOrThrow("BOT_CLIENT_ID");
-const generatorApiGatewayUrl = getOrThrow("API_GATEWAY_URL");
 const openrouterKey = getOrThrow("OPENROUTER_API_KEY");
 const debugGuildId = getOrThrow("DEBUG_GUILD_ID");
 const mainChannelId = getOrThrow("MAIN_CHANNEL_ID");
@@ -24,7 +23,6 @@ export {
   botClientId,
   botToken,
   debugGuildId,
-  generatorApiGatewayUrl,
   mainChannelId,
   myUserId,
   openrouterKey,
