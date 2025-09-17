@@ -17,6 +17,7 @@ import type {
   SlashCommandBuilder,
 } from "discord.js";
 import type { TextChannel } from "discord.js";
+import type { ScenarioEntity } from "./table/models.ts";
 
 export type ValidNpcInteractionMessage = Message<true> & {
   channel: TextChannel;
@@ -43,6 +44,8 @@ const client = new Client({
     Partials.User,
   ],
 });
+
+client.scenarioCache = new Collection<string, ScenarioEntity>();
 
 client.commands = new Collection<string, BotCommand>();
 

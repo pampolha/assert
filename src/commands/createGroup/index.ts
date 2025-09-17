@@ -66,19 +66,33 @@ const command: BotCommand = {
       return;
     }
 
-    const latestScenario = (await ScenarioModel.find({
-      GS1PK: "SCENARIO",
-    }, {
-      index: "gs1",
-      limit: 1,
-      reverse: true,
-    })).at(0);
+    const scenarioCacheKey = new Date().toISOString().slice(0, 10);
+    let latestCacheScenario = interaction.client.scenarioCache.get(
+      scenarioCacheKey,
+    );
 
-    if (!latestScenario) {
-      await interaction.editReply({
-        content: "Nenhum cenário disponível no momento.",
-      });
-      return;
+    if (!latestCacheScenario) {
+      const latestScenario = (await ScenarioModel.find({
+        GS1PK: "SCENARIO",
+      }, {
+        index: "gs1",
+        limit: 1,
+        reverse: true,
+      })).at(0);
+
+      if (!latestScenario) {
+        await interaction.editReply({
+          content: "Nenhum cenário disponível no momento.",
+        });
+        return;
+      }
+
+      interaction.client.scenarioCache.set(
+        scenarioCacheKey,
+        latestScenario,
+      );
+
+      latestCacheScenario = latestScenario;
     }
 
     const sessionId = crypto.randomUUID();
@@ -86,7 +100,7 @@ const command: BotCommand = {
 
     const sessionEntity: SessionEntity = {
       sessionId,
-      scenarioId: latestScenario.scenarioId,
+      scenarioId: latestCacheScenario.scenarioId,
       status: "FORMING",
       expiryDate: oneHourFromNowMs,
     };
