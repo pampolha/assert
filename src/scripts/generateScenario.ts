@@ -1,4 +1,10 @@
-const prompt = `1. MAIN OBJECTIVE:
+import { OpenAI } from "openai";
+import { scenarioSchema } from "../schemas/scenario.ts";
+import { ScenarioModel } from "../table/models.ts";
+import z from "zod";
+import { openrouterKey } from "../env.ts";
+
+const generatorPrompt = `1. MAIN OBJECTIVE:
 Generate an intense remote IT team work simulation scenario that exposes the harsh realities of modern capitalism while presenting challenging professional situations. Participants must practice maintaining composure and using assertive communication to navigate ruthless corporate pressures, complex ethical dilemmas, and interpersonal conflicts. The focus should be on developing skills to defend one's position professionally while respecting others, while facing difficult choices between profit, ethics, and personal integrity.
 
 2. DESIGN PHILOSOPHY FOR THE LLM:
@@ -57,4 +63,43 @@ The response shall be a valid JSON object with the following attributes:
 5. FINAL INSTRUCTION FOR THE LLM:
 Draw inspiration from real corporate scandals and tech industry controversies. Create scenarios that genuinely test players' moral compasses under extreme pressure while helping them develop crucial professional communication skills. Focus on situations that require maintaining composure under pressure while clearly and respectfully asserting one's position. When complete, translate the entire response to Brazilian Portuguese maintaining all technical and corporate terminology.` as const;
 
-export default prompt;
+(async () => {
+  const router = new OpenAI({
+    baseURL: "https://openrouter.ai/api/v1",
+    apiKey: openrouterKey,
+  });
+  const response = await router.chat.completions.create({
+    model: "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
+    temperature: 1,
+    messages: [
+      { role: "system", content: `${crypto.randomUUID()}\n${generatorPrompt}` },
+      {
+        role: "user",
+        content: `${crypto.randomUUID()}\nYour answer:`,
+      },
+    ],
+    response_format: {
+      type: "json_schema",
+      json_schema: {
+        schema: z.toJSONSchema(scenarioSchema),
+        name: "scenario",
+      },
+    },
+  });
+
+  const generatedContent = response.choices[0].message.content;
+
+  if (!generatedContent) {
+    throw new Error("Empty model response");
+  }
+
+  const parsedData = JSON.parse(generatedContent);
+  const parsedContent = scenarioSchema.parse(parsedData);
+
+  console.log(parsedContent);
+
+  await ScenarioModel.create({
+    scenarioId: crypto.randomUUID(),
+    ...parsedContent,
+  });
+})();
