@@ -5,7 +5,7 @@ import type {
 } from "../../table/models.ts";
 import type { Client } from "discord.js";
 import { collectListener } from "./feedbackCollectorListeners.ts";
-import type { ComponentType } from "discord.js";
+import { ComponentType } from "discord.js";
 
 export const sendFeedbackForms = async (
   client: Client,
@@ -14,7 +14,7 @@ export const sendFeedbackForms = async (
 ) => {
   if (allParticipants.length <= 1) return;
 
-  for (const participant of allParticipants) {
+  await Promise.all(allParticipants.map(async (participant) => {
     const user = await client.users.fetch(participant.participantId);
 
     const dmChannel = await user.createDM();
@@ -35,47 +35,37 @@ export const sendFeedbackForms = async (
       components: [row],
     });
 
-    const oneHourMs = 1000 * 60 * 60;
-    const collector = message.createMessageComponentCollector<
-      ComponentType.Button
-    >({
-      filter: (i) => i.user.id === participant.participantId,
-      time: oneHourMs,
-    });
+    const oneHourMs = 60_000 * 60;
 
-    collector.on(
-      "collect",
-      async (collectorInteraction) => {
-        try {
-          await collectListener(
-            collectorInteraction,
-            allParticipants,
-            session.sessionId,
-            participant.participantId,
-          );
-          await message.delete();
-        } catch (err) {
-          console.error("Error or timeout during modal submission: ", err);
-          await message.edit({
-            content: "O tempo para enviar o feedback esgotou.",
-            components: [],
-          });
-        } finally {
-          collector.stop();
-        }
-      },
-    );
+    let collectorInteraction;
+    try {
+      collectorInteraction = await message.awaitMessageComponent({
+        filter: (i) => i.user.id === participant.participantId,
+        time: oneHourMs,
+        componentType: ComponentType.Button,
+      });
+    } catch {
+      await message.edit({
+        content: "O tempo para dar seu feedback expirou.",
+        components: [],
+      });
+      return;
+    }
 
-    collector.on(
-      "end",
-      async (_collected, reason) => {
-        if (reason === "time") {
-          await message.edit({
-            content: "O tempo para dar seu feedback expirou.",
-            components: [],
-          });
-        }
-      },
-    );
-  }
+    try {
+      await collectListener(
+        collectorInteraction,
+        allParticipants,
+        session.sessionId,
+        participant.participantId,
+      );
+      await message.edit({ content: "*Feedback enviado.*" });
+    } catch (err) {
+      console.error("Error or timeout during modal submission: ", err);
+      await message.edit({
+        content: "O tempo para enviar o feedback esgotou.",
+        components: [],
+      });
+    }
+  }));
 };

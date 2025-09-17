@@ -45,6 +45,7 @@ export const collectListener = async (
   const modalInteraction = await collectorInteraction.awaitModalSubmit({
     time: tenMinutesMs,
   });
+  await modalInteraction.deferReply({ flags: "Ephemeral" });
 
   for (const actionRow of modalInteraction.components) {
     for (const component of actionRow.components) {
@@ -86,7 +87,7 @@ export const collectListener = async (
     }
   }
 
-  await modalInteraction.reply({
+  await modalInteraction.editReply({
     content: "Obrigado! Seu feedback foi registrado.",
   });
 };

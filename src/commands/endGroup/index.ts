@@ -5,12 +5,9 @@ import {
   ComponentType,
   SlashCommandBuilder,
 } from "discord.js";
-import type { BotCommand } from "assert-bot"
-import {
-  SessionModel,
-  SessionParticipantModel,
-} from "../../table/models.ts";
-import { collectListener, endListener } from "./collectorListeners.ts";
+import type { BotCommand } from "assert-bot";
+import { SessionModel, SessionParticipantModel } from "../../table/models.ts";
+import { collectListener } from "./collectorListeners.ts";
 
 const command: BotCommand = {
   data: new SlashCommandBuilder()
@@ -21,13 +18,11 @@ const command: BotCommand = {
 
   async execute(interaction) {
     if (!interaction.guild) {
-      await interaction.reply({
+      await interaction.editReply({
         content: "Este comando só pode ser usado em um servidor (guilda).",
-        ephemeral: true,
       });
       return;
     }
-    await interaction.deferReply({ ephemeral: true });
 
     const [activeSessions, formingSessions, userParticipantEntities] =
       await Promise.all([
@@ -50,9 +45,8 @@ const command: BotCommand = {
     );
 
     if (!userOwnedSession) {
-      await interaction.followUp({
+      await interaction.editReply({
         content: "Você não é o dono de nenhum grupo ativo ou em formação.",
-        ephemeral: true,
       });
       return;
     }
@@ -70,41 +64,33 @@ const command: BotCommand = {
     const row = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(cancelButton, confirmButton);
 
-    const reply = await interaction.followUp({
+    const reply = await interaction.editReply({
       content:
         "Tem certeza de que deseja encerrar esta sessão? Todos os canais associados serão excluídos.",
       components: [row],
-      ephemeral: true,
     });
 
     const oneMinuteMs = 60_000;
-    const collector = reply.createMessageComponentCollector({
-      time: oneMinuteMs,
-      componentType: ComponentType.Button,
-    });
 
-    collector.on(
-      "collect",
-      (collectorInteraction) =>
-        collectListener(
-          interaction,
-          collectorInteraction,
-          userOwnedSession,
-        ).then(() => collector.stop()).catch((err) => {
-          collectorInteraction.editReply({
-            content:
-              "Ocorreu um erro ao tentar encerrar a sessão. Por favor, tente novamente.",
-          });
-          console.error("Error while collecting endGroup interaction", err);
-        }),
-    );
+    let buttonInteraction;
+    try {
+      buttonInteraction = await reply.awaitMessageComponent({
+        time: oneMinuteMs,
+        componentType: ComponentType.Button,
+      });
+    } catch {
+      interaction.editReply({
+        content: "Tempo esgotado para tomar decisão de encerramento de sessão.",
+        components: [],
+      });
+      return;
+    }
 
-    collector.on(
-      "end",
-      (_collected, reason) =>
-        endListener(interaction, reason).catch((err) =>
-          console.error("Error while finishing endGroup collector", err)
-        ),
+    await buttonInteraction.deferUpdate();
+    await collectListener(
+      interaction,
+      buttonInteraction,
+      userOwnedSession,
     );
   },
 };
