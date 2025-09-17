@@ -8,13 +8,13 @@ export const handleGenerateScenario = async (
   router: OpenAI,
 ) => {
   const response = await router.chat.completions.create({
-    model: "deepseek/deepseek-chat-v3.1",
+    model: "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
+    temperature: 1,
     messages: [
       { role: "system", content: `${crypto.randomUUID()}\n${generatorPrompt}` },
       {
         role: "user",
-        content:
-          `${crypto.randomUUID()}\nPor favor, gere um novo cenário de simulação agora.`,
+        content: `${crypto.randomUUID()}\nYour answer:`,
       },
     ],
     response_format: {

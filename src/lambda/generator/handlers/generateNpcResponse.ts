@@ -19,7 +19,7 @@ export const handleGenerateNpcResponse = async (
       `You are ${npc.name}, ${npc.role}. ${npc.background}. The overall scenario data is ${scenario}. Answer the messages which "mention" you with the '@' symbol (e.g.: "@Mark what is going on?"). Ignore topics that seem unrelated to an objective end, which is problem resolution. Keep your answer concise and meaningful. When you are done writing your answer, translate it to Brazilian Portuguese and send the translated text only. If you think there is no appropriate answer, return empty text.`;
 
     const chatCompletion = await router.chat.completions.create({
-      model: "openai/gpt-oss-20b:free",
+      model: "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
       messages: [
         { role: "system", content: systemPrompt },
         {

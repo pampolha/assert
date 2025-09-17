@@ -1,51 +1,60 @@
 const prompt = `1. MAIN OBJECTIVE:
-Generate a remote IT team work simulation scenario. Every element (environment, project, characters [playable and AI NPCs], conflicts, and information) must be woven with rich details, backstories, complex motivations, and vivid personalities, aiming to practice soft skills in a context that captures attention and encourages strategic roleplay.
+Generate an intense remote IT team work simulation scenario that exposes the harsh realities of modern capitalism while presenting challenging professional situations. Participants must practice maintaining composure and using assertive communication to navigate ruthless corporate pressures, complex ethical dilemmas, and interpersonal conflicts. The focus should be on developing skills to defend one's position professionally while respecting others, while facing difficult choices between profit, ethics, and personal integrity.
 
 2. DESIGN PHILOSOPHY FOR THE LLM:
-Generated scenarios must be realistic, but keep in mind that it is going to be used in a text-based and short manner; for example, there is no point in demanding deliverables in a specific amount of time, due to the short time in which the generated scenario will be discussed in the real world anyway. 
-Give deep reasoning for things to be the way they are: if a project is delayed, why exactly? What promises were made? Who are the stakeholders and what motivates them?
+Scenarios must be brutally realistic and professionally challenging, featuring situations that require diplomatic yet firm responses. Include elements like: aggressive deadlines, resource constraints, conflicting stakeholder interests, moral compromises, and references to real-world corporate scandals. The dilemmas should force players to make tough decisions with no perfect solutions while practicing clear, confident, and respectful communication under extreme pressure.
 
 3. OUTPUT FORMAT:
 The response shall be a valid JSON object with the following attributes:
 
     corporate:
-        company_name: String, name of the company.
+        company_name: String, name of the company that reflects its industry and ruthless nature.
 
-        company_history: String, a brief history of the company, focusing on past events that shape the present and the mindset of employees.
+        company_history: String, a detailed history including past controversies, mergers, layoffs, ethical compromises, values, and recent challenges that shaped its current culture.
 
-        current_project: String, detailed description of the current stage of the project, the challenges faced, the existing pressure and expectations.
+        current_project: String, description of the high-stakes project including tight deadlines, budget overruns, technical debt, pressure from executives/shareholders, and stakeholder expectations.
 
-    challenge: String, a narrative of the event that is going to be the main topic of discussion of the scenario. Subtly describe the implications. You can add more details if they are adequate and useful.
+    challenge: String, a narrative of a critical professional incident that requires assertive communication and composure. This must involve severe ethical dilemmas, legal gray areas, potential public scandals, and situations like: defending a timeline, negotiating resources, addressing quality concerns, or managing conflicting instructions. Describe the immediate threat and long-term consequences.
 
-    characters: Array of Objects (exactly 4 objects), each being assigned to a potential person in the group. There is always going to be at least 1 participant, and at most 4. Since some of these are possibly not present in the group due to insufficient players, make sure the scenario is coherent and works without their participation. Attributes:
+    characters: Array of Objects (exactly 4 objects), each representing a playable role. Attributes:
 
-        role: String, role of the fictional character in the company.
+        role: String, specific professional role (e.g., "Senior Developer facing layoffs", "Project Manager with knowledge of security flaws", "Quality Assurance Lead")
 
-        background: String, key information about the character that may prove useful in discussions. Avoid using pronouns (he/she/they) and names for playable characters. Use descriptive terms based on their role instead.
+        background: String, detailed professional background including expertise, current responsibilities, career ambitions, personal financial pressures, and past ethical compromises. Avoid pronouns and names - use role-based descriptions.
 
-        ace: String. A crucial piece of information, a unique perspective, a moral dilemma, or a secret that only this character knows and may (or not) reveal, significantly impacting the discussion. Avoid using pronouns and names for playable characters.
+        ace: String, a damaging secret or key piece of information that this character can use to support their position in discussions. Must involve serious moral trade-offs and encourage assertive yet professional communication.
 
-    npcs: Array of Objects (at least 1 object), each containing:
+    npcs: Array of Objects (at least 2 objects), each containing:
 
-        name: String, name of the non playable character.
+        name: String, professional name suggesting their role and personality
 
-        role: String, role of the non playable character in the company or outside of it.
+        role: String, corporate role or stakeholder position
 
-        background: String. A concise yet rich biography that explains the non playable character motivations, style, values, features, and maybe how they reached their current position. Keep in mind that these NPCs will be conversated with, so make sure to include useful information that helps their response prompts in the generative AI.
+        background: String, detailed professional background including their objectives, communication style (e.g., "aggressive", "passive-aggressive", "impatient"), motivations tied to profit, power, or survival, and willingness to compromise ethics for results.
 
-    objective: String, the main objective the group needs to achieve to "win" or satisfactorily resolve the presented challenge. The objective must require players to conversate between themselves (if there is more than one) and with the non-playable characters. The players will invoke a command that checks the text messages of the conversation channel to determine if the objective has been reached or not, thus finishing the session or failing it.
+    objective: String, the primary goal that requires navigating ethical dilemmas while managing corporate pressures and using assertive communication techniques. The objective must involve making difficult choices between:
+        - Truth vs Profit
+        - Personal ethics vs Company loyalty
+        - Short-term gains vs Long-term consequences
+        - Individual survival vs Team welfare
+        And must also involve:
+        - Clearly stating needs and boundaries
+        - Respectfully challenging unreasonable demands
+        - Negotiating compromises
+        - Maintaining professional relationships
+        - Reaching a workable solution for all parties
 
 4. LLM RESTRICTIONS:
 
-    Depth is Key: Prioritize narrative details, motivations, and backstory over brevity.
+    Uncompromising Realism: Portray the grim realities of corporate life without sugarcoating while maintaining professional focus. Include elements like: burnout, inequality, ethical compromises, career-threatening pressures, and opportunities for assertive communication.
 
-    Conflict and Tension: Create situations with genuine, modern tension and moral, ethical or professional dilemmas.
+    Complex Dilemmas: Create situations where every option has significant negative consequences and there are no easy solutions. The focus should be on communication skills development under extreme pressure.
 
-    Internal Consistency: Ensure that backgrounds, personalities, and secrets are consistent and make sense within the larger narrative.
+    Corporate Savagery: Reflect ruthless business practices including: manipulating metrics, hiding failures, sacrificing team members, and prioritizing stock price over everything, while ensuring opportunities for players to practice being firm yet respectful.
 
-    Character Naming: Do not include names or pronouns for playable characters. Use role-based descriptions instead.
+    Character Depth: Each character must have conflicting motivations, something to lose, and professional information that can be used to build persuasive arguments.
 
 5. FINAL INSTRUCTION FOR THE LLM:
-Use your creative capacity to generate a scenario that tests soft skills with a convincing and engaging story. Surprise me with the depth and richness of details. When you are done writing, translate the text to Brazilian Portuguese and asnwer with the translated text.` as const;
+Draw inspiration from real corporate scandals and tech industry controversies. Create scenarios that genuinely test players' moral compasses under extreme pressure while helping them develop crucial professional communication skills. Focus on situations that require maintaining composure under pressure while clearly and respectfully asserting one's position. When complete, translate the entire response to Brazilian Portuguese maintaining all technical and corporate terminology.` as const;
 
 export default prompt;
