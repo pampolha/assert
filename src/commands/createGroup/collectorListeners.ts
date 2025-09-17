@@ -69,9 +69,9 @@ const handleGroupSpotLeaveButtonInteraction = async (
       part.participantId === collectorInteraction.user.id
     )
   ) {
-    await collectorInteraction.reply({
+    await collectorInteraction.followUp({
       content: "Você não faz parte deste grupo.",
-      ephemeral: true,
+      flags: "Ephemeral",
     });
     return;
   }
@@ -80,10 +80,10 @@ const handleGroupSpotLeaveButtonInteraction = async (
     collectorInteraction.user.id ===
       sessionParticipants.find((part) => part.role === "owner")?.participantId
   ) {
-    await collectorInteraction.reply({
+    await collectorInteraction.followUp({
       content:
         "O criador da sessão não pode sair. Por favor, encerre a sessão.",
-      ephemeral: true,
+      flags: "Ephemeral",
     });
     return;
   }
@@ -99,7 +99,7 @@ const handleGroupSpotLeaveButtonInteraction = async (
   );
   const updatedButtonRow = getUpdatedButtonRow({ ...input, sessionMembers });
 
-  await collectorInteraction.update({ components: [updatedButtonRow] });
+  await collectorInteraction.editReply({ components: [updatedButtonRow] });
 };
 
 const collectListener = async (input: {
@@ -130,9 +130,9 @@ const collectListener = async (input: {
   );
 
   if (!session) {
-    await collectorInteraction.reply({
+    await collectorInteraction.followUp({
       content: "Este grupo não está mais aceitando participantes.",
-      ephemeral: true,
+      flags: "Ephemeral",
     });
     return;
   }
@@ -154,17 +154,17 @@ const collectListener = async (input: {
       part.participantId === collectorInteraction.user.id
     )
   ) {
-    await collectorInteraction.reply({
+    await collectorInteraction.followUp({
       content: "Você já faz parte deste grupo.",
-      ephemeral: true,
+      flags: "Ephemeral",
     });
     return;
   }
 
   if (sessionParticipants.length >= 4) {
-    await collectorInteraction.reply({
+    await collectorInteraction.followUp({
       content: "Este grupo já está cheio",
-      ephemeral: true,
+      flags: "Ephemeral",
     });
     return;
   }
@@ -188,16 +188,14 @@ const collectListener = async (input: {
     collectorInteraction,
   });
 
-  await collectorInteraction.update({ components: [updatedButtonRow] });
+  await collectorInteraction.editReply({ components: [updatedButtonRow] });
 };
 
 const endListener = async (input: {
   commandInteraction: CommandInteraction;
   groupMessage: Message;
   groupMessageActionRow: ActionRowBuilder<ButtonBuilder>;
-}, reason: string): Promise<void> => {
-  if (reason !== "time") return;
-
+}): Promise<void> => {
   const { commandInteraction, groupMessage, groupMessageActionRow } = input;
 
   const disabledButtons = groupMessageActionRow.components.map((button) =>

@@ -27,14 +27,11 @@ const command: BotCommand = {
       !interaction.guild ||
       interaction.channel?.id !== mainChannelId
     ) {
-      await interaction.reply({
+      await interaction.editReply({
         content: "Este comando só pode ser usado no canal principal da guilda.",
-        ephemeral: true,
       });
       return;
     }
-
-    await interaction.deferReply({ ephemeral: true });
 
     const [formingSessions, activeSessions, userParticipantEntities] =
       await Promise.all([
@@ -96,7 +93,8 @@ const command: BotCommand = {
     }
 
     const sessionId = crypto.randomUUID();
-    const oneHourFromNowMs = Date.now() + (60_000 * 60);
+    const oneHourMs = 60_000 * 60;
+    const oneHourFromNowMs = Date.now() + oneHourMs;
 
     const sessionEntity: SessionEntity = {
       sessionId,
@@ -146,39 +144,30 @@ const command: BotCommand = {
     });
     interaction.deleteReply();
 
-    const oneHourMs = 60_000 * 60;
-    const collector = groupMessage.createMessageComponentCollector({
-      componentType: ComponentType.Button,
-      time: oneHourMs,
-    });
-
-    collector.on(
-      "collect",
-      (i) =>
-        collectListener({
-          collectorInteraction: i,
-          commandInteraction: interaction,
-          groupMessageActionRow,
-          sessionId,
-        }).catch((err) =>
-          console.error(
-            "Error while collecting createGroup interaction",
-            err,
-          )
-        ),
-    );
-
-    collector.on(
-      "end",
-      (_collected, reason) =>
-        endListener({
+    while (Date.now() < oneHourFromNowMs) {
+      let collectorInteraction;
+      try {
+        collectorInteraction = await groupMessage.awaitMessageComponent({
+          componentType: ComponentType.Button,
+          time: oneHourMs,
+        });
+      } catch {
+        await endListener({
           groupMessage,
           groupMessageActionRow,
           commandInteraction: interaction,
-        }, reason).catch((err) =>
-          console.error("Error while finishing createGroup collector", err)
-        ),
-    );
+        });
+        return;
+      }
+
+      await collectorInteraction.deferUpdate();
+      await collectListener({
+        commandInteraction: interaction,
+        collectorInteraction,
+        groupMessageActionRow,
+        sessionId,
+      });
+    }
   },
 };
 

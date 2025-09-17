@@ -18,17 +18,25 @@ export const collectListener = async (
   }
 
   if (collectorInteraction.customId === "confirm_end_session") {
-    await collectorInteraction.update({
-      content: "Encerrando sessão...",
-      components: [],
-    });
+    const userGroupMessages = commandInteraction.channel?.messages.cache.filter(
+      (msg) =>
+        msg.author === commandInteraction.client.user &&
+        msg.mentions.users.has(collectorInteraction.user.id),
+    );
 
-    {
-      await SessionModel.update({
+    await Promise.all([
+      collectorInteraction.editReply({
+        content: "Encerrando sessão...",
+        components: [],
+      }),
+      userGroupMessages?.map((msg) =>
+        msg.edit({ content: "*Sessão encerrada.*", components: [] })
+      ),
+      SessionModel.update({
         sessionId: session.sessionId,
         status: "ENDED",
-      });
-    }
+      }),
+    ]);
 
     const channels = await SessionChannelModel.find({
       sessionId: session.sessionId,
@@ -60,24 +68,13 @@ export const collectListener = async (
       );
     }
 
-    await collectorInteraction.editReply({
+    collectorInteraction.editReply({
       content: "Sessão encerrada com sucesso!",
-    });
+    }).catch(() => null);
   } else if (collectorInteraction.customId === "cancel_end_session") {
-    await collectorInteraction.update({
+    await collectorInteraction.editReply({
       content: "Operação de encerramento de sessão cancelada.",
       components: [],
     });
   }
-};
-
-export const endListener = async (
-  commandInteraction: CommandInteraction,
-  reason: string,
-) => {
-  if (reason !== "time") return;
-  await commandInteraction.editReply({
-    content: "Tempo esgotado para tomar decisão de encerramento de sessão.",
-    components: [],
-  });
 };

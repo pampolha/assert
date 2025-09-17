@@ -7,7 +7,7 @@ import {
 } from "discord.js";
 import { SessionModel, SessionParticipantModel } from "../../table/models.ts";
 import { mainChannelId } from "../../env.ts";
-import { collectListener, endListener } from "./collectorListeners.ts";
+import { collectListener } from "./collectorListeners.ts";
 import type { BotCommand } from "assert-bot";
 
 const command: BotCommand = {
@@ -22,14 +22,11 @@ const command: BotCommand = {
       !interaction.guild ||
       interaction.channel?.id !== mainChannelId
     ) {
-      await interaction.reply({
+      await interaction.editReply({
         content: "Este comando só pode ser usado no canal principal da guilda.",
-        ephemeral: true,
       });
       return;
     }
-
-    await interaction.deferReply({ ephemeral: true });
 
     const [formingSessions, userParticipantEntities] = await Promise.all([
       SessionModel.find({
@@ -50,9 +47,8 @@ const command: BotCommand = {
     );
 
     if (!session) {
-      await interaction.reply({
+      await interaction.editReply({
         content: "Você não é o dono de nenhum grupo em formação.",
-        ephemeral: true,
       });
       return;
     }
@@ -74,38 +70,33 @@ const command: BotCommand = {
     const row = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(cancelButton, confirmButton);
 
-    const reply = await interaction.followUp({
+    const reply = await interaction.editReply({
       content:
         `Tem certeza de que deseja iniciar a sessão com ${participants.length} participantes?`,
       components: [row],
-      ephemeral: true,
     });
 
-    const collector = reply.createMessageComponentCollector({
-      filter: (i) => i.user.id === interaction.user.id,
-      time: 60_000,
-      componentType: ComponentType.Button,
-    });
+    let collectorInteraction;
+    try {
+      collectorInteraction = await reply.awaitMessageComponent({
+        filter: (i) => i.user.id === interaction.user.id,
+        time: 60_000,
+        componentType: ComponentType.Button,
+      });
+    } catch {
+      await interaction.editReply({
+        content: "Tempo esgotado para confirmar o início da sessão.",
+        components: [],
+      });
+      return;
+    }
 
-    collector.on(
-      "collect",
-      (collectorInteraction) =>
-        collectListener(
-          interaction,
-          collectorInteraction,
-          session,
-          participants,
-        ).catch((err) =>
-          console.error("Error while collecting startGroup interaction", err)
-        ),
-    );
-
-    collector.on(
-      "end",
-      (_collected, reason) =>
-        endListener(interaction, reason)?.catch((err) =>
-          console.error("Error while finishing startGroup collector", err)
-        ),
+    await collectorInteraction.deferUpdate();
+    await collectListener(
+      interaction,
+      collectorInteraction,
+      session,
+      participants,
     );
   },
 };

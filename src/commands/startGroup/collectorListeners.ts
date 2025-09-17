@@ -19,19 +19,29 @@ export const collectListener = async (
   }
 
   if (collectorInteraction.customId === "confirm_start_session") {
-    await collectorInteraction.update({
-      content: "Gerando cenário e criando canais...",
-      components: [],
-    });
+    const userGroupMessages = commandInteraction.channel?.messages.cache.filter(
+      (msg) =>
+        msg.author === commandInteraction.client.user &&
+        msg.mentions.users.has(collectorInteraction.user.id),
+    );
+
+    await Promise.all([
+      collectorInteraction.editReply({
+        content: "Gerando cenário e criando canais...",
+        components: [],
+      }),
+      userGroupMessages?.map((msg) =>
+        msg.edit({ content: `*Grupo iniciado*`, components: [] })
+      ),
+    ]);
 
     const scenario = await ScenarioModel.get({
       scenarioId: session.scenarioId,
     });
 
     if (!scenario) {
-      await commandInteraction.followUp({
+      await commandInteraction.editReply({
         content: "Cenário não encontrado.",
-        ephemeral: true,
       });
       return;
     }
@@ -159,27 +169,15 @@ export const collectListener = async (
         channelId: voiceChannel.id,
         type: "voiceChannel",
       }),
-      commandInteraction.followUp({
+      commandInteraction.editReply({
         content:
           `Sua sessão de simulação foi iniciada! Você pode encontrar seus canais aqui: ${textChannel} (texto) e ${voiceChannel} (voz).`,
-        ephemeral: true,
       }),
     ]);
   } else if (collectorInteraction.customId === "cancel_start_session") {
-    await collectorInteraction.update({
+    await collectorInteraction.editReply({
       content: "Operação de início de sessão cancelada.",
       components: [],
     });
   }
-};
-
-export const endListener = (
-  commandInteraction: CommandInteraction,
-  reason: string,
-) => {
-  if (reason !== "time") return;
-  return commandInteraction.editReply({
-    content: "Tempo esgotado para confirmar o início da sessão.",
-    components: [],
-  });
 };
