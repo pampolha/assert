@@ -1,26 +1,31 @@
 import { OpenAI } from "openai";
 import { handleGenerateScenario } from "./handlers/generateScenario.ts";
 import { handleGenerateNpcResponse } from "./handlers/generateNpcResponse.ts";
-import type z from "zod";
-import type { scenarioSchema } from "./schemas/scenario.ts";
 import { openrouterKey } from "../../env.ts";
+import { npcResponsePayloadSchema } from "../../schemas/npcResponse.ts";
+import z from "zod";
 
 const openrouter = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
   apiKey: openrouterKey,
 });
 
+export type ScenarioPayload = {
+  action: "generateScenario";
+};
+
 export const handler = async (event: Record<string, unknown>) => {
   try {
-    console.log("event:", JSON.stringify(event));
-
-    let requestBody: {
-      action: string;
-      conversationHistory?: string;
-      npc?: z.output<typeof scenarioSchema>["npcs"][0];
-    };
+    console.log(event);
+    let payload;
     try {
-      requestBody = JSON.parse(event.body as string);
+      const requestBody = JSON.parse(event.body as string);
+      payload = z.parse(
+        npcResponsePayloadSchema.or(
+          z.object({ action: z.enum(["generateScenario"]) }),
+        ),
+        requestBody,
+      );
     } catch (parseError) {
       console.error("error on event body parse :", parseError);
       return {
@@ -30,27 +35,13 @@ export const handler = async (event: Record<string, unknown>) => {
       };
     }
 
-    const { action } = requestBody;
-
-    switch (action) {
+    switch (payload.action) {
       case "generateScenario":
         return await handleGenerateScenario(openrouter);
 
       case "generateNpcResponse":
-        if (!requestBody.conversationHistory || !requestBody.npc) {
-          return {
-            statusCode: 400,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              message:
-                "Parâmetros 'conversationHistory' ou 'npc' ausentes para a ação 'generateNpcResponse'.",
-            }),
-          };
-        }
         return await handleGenerateNpcResponse({
-          action,
-          conversationHistory: requestBody.conversationHistory,
-          npc: requestBody.npc,
+          ...payload,
         }, openrouter);
 
       default:

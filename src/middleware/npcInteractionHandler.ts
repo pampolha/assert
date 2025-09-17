@@ -1,19 +1,21 @@
-import type { Message } from "discord.js";
-import axios from "axios";
+import type { ValidNpcInteractionMessage } from "assert-bot";
 import { generatorApiGatewayUrl } from "../env.ts";
 import {
-  type ScenarioEntity,
   ScenarioModel,
   SessionChannelModel,
   SessionModel,
 } from "../table/models.ts";
-import type { OmitPartialGroupDMChannel } from "discord.js";
+import type {
+  ChannelHistoryMessage,
+  NpcResponsePayload,
+} from "../schemas/npcResponse.ts";
 
 export const handleNpcMention = async (
-  message: OmitPartialGroupDMChannel<Message>,
+  message: ValidNpcInteractionMessage,
 ) => {
+  const { channel } = message;
   const sessionTextChannel = await SessionChannelModel.get({
-    channelId: message.channel.id,
+    channelId: channel.id,
     type: "textChannel",
   }, { index: "gs1" });
 
@@ -51,40 +53,39 @@ export const handleNpcMention = async (
 
   if (triggeredNpc) {
     try {
-      await message.channel.sendTyping();
+      channel.sendTyping();
 
-      const messageHistory = await message.channel.messages.fetch();
+      const conversationHistory: ChannelHistoryMessage[] =
+        (await message.channel.messages.fetch({ limit: 50 })).map(
+          (msg) => ({
+            username: msg.author.username,
+            content: msg.cleanContent,
+          }),
+        );
 
-      const conversationHistory = messageHistory
-        .reverse()
-        .map((msg) => `${msg.author.username}: ${msg.content}`)
-        .join("\n");
+      const webhook = await channel.createWebhook({
+        name: triggeredNpc.name,
+      });
 
-      const payload: {
-        action: string;
-        conversationHistory: string;
-        npc: ScenarioEntity["npcs"][0];
-      } = {
+      const payload: NpcResponsePayload = {
         action: "generateNpcResponse",
         conversationHistory,
-        npc: {
-          name: triggeredNpc.name,
-          role: triggeredNpc.role,
-          background: triggeredNpc.background,
+        scenario,
+        npc: triggeredNpc,
+        webhookData: {
+          id: webhook.id,
+          token: webhook.token,
+          url: webhook.url,
         },
       };
 
-      const response = await axios.post<{ npcResponse: string }>(
-        generatorApiGatewayUrl,
-        payload,
-      );
-
-      if (response.data && response.data.npcResponse) {
-        await message.channel.send(response.data.npcResponse);
-      }
+      fetch(generatorApiGatewayUrl, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }).catch(console.error);
     } catch (error) {
-      console.error("Erro ao lidar com a interação do NPC:", error);
-      await message.channel.send(
+      console.error(error);
+      await channel.send(
         "Ocorreu um erro ao processar a resposta do NPC.",
       );
     }

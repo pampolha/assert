@@ -7,20 +7,22 @@ exports.handler = async (event, context) => {
 
   return new Promise((resolve, reject) => {
     const child = spawn(generatorPath, [], {
-      stdio: ["pipe", "pipe", "inherit"],
       env: process.env,
     });
 
-    let stdout = "";
     child.stdout.on("data", (data) => {
-      stdout += data.toString();
+      console.log(String(data));
+    });
+
+    child.stderr.on("data", (data) => {
+      console.error(String(data));
     });
 
     child.on("close", (code) => {
       if (code !== 0) {
         reject(new Error(`Generator process exited with code ${code}`));
       } else {
-        resolve(stdout);
+        resolve();
       }
     });
 

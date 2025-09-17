@@ -4,7 +4,10 @@ export const scenarioSchema = z.object({
   corporate: z.object({
     company_name: z.string().min(1, "Company name is required"),
     company_history: z.string().min(1, "Company history is required"),
-    current_project: z.string().min(1, "Current project description is required"),
+    current_project: z.string().min(
+      1,
+      "Current project description is required",
+    ),
   }),
   challenge: z.string().min(1, "Challenge description is required"),
   characters: z.array(
