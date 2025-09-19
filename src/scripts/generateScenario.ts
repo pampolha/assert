@@ -69,7 +69,7 @@ Draw inspiration from real corporate scandals and tech industry controversies. C
     apiKey: openrouterKey,
   });
   const response = await router.chat.completions.create({
-    model: "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
+    model: "tngtech/deepseek-r1t2-chimera:free",
     temperature: 1,
     messages: [
       { role: "system", content: `${crypto.randomUUID()}\n${generatorPrompt}` },

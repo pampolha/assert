@@ -9,7 +9,7 @@ import path from "node:path";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import { botToken, mainChannelId } from "./env.ts";
-import { handleNpcMention } from "./middleware/npcInteractionHandler.ts";
+import { generateNpcResponse } from "./middleware/generateNpcResponse.ts";
 import { ChannelType } from "discord.js";
 import type {
   CommandInteraction,
@@ -110,7 +110,7 @@ client.on(Events.MessageCreate, (message) => {
     msg.content.includes("@");
 
   if (isValidMessage(message)) {
-    handleNpcMention(message);
+    generateNpcResponse(message);
   }
 });
 

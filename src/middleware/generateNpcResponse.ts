@@ -5,47 +5,10 @@ import {
   SessionModel,
 } from "../table/models.ts";
 import { OpenAI } from "openai";
-import type { Message, Webhook, WebhookType } from "discord.js";
-import type { ScenarioEntity } from "../table/models.ts";
+import type { Webhook, WebhookType } from "discord.js";
 import { openrouterKey } from "../env.ts";
 
-const generateNpcResponse = async (
-  conversationHistory: Message[],
-  scenario: ScenarioEntity,
-  npc: ScenarioEntity["npcs"][0],
-  router = new OpenAI({
-    baseURL: "https://openrouter.ai/api/v1",
-    apiKey: openrouterKey,
-  }),
-) => {
-  const formattedHistory = conversationHistory.map((msg) =>
-    `${msg.author.username} said: "${msg.content}"`
-  ).join("\n");
-
-  const systemPrompt =
-    `You are ${npc.name}, ${npc.role}. ${npc.background}. The overall scenario data is ${scenario}. Answer the messages which "mention" you with the '@' symbol (e.g.: "@Mark what is going on?"). Ignore topics that seem unrelated to an objective end, which is problem resolution. Keep your answer concise and meaningful. When you are done writing your answer, translate it to Brazilian Portuguese and send the translated text only. If you think there is no appropriate answer, return empty text.` as const;
-
-  const chatCompletion = await router.chat.completions.create({
-    model: "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
-    messages: [
-      { role: "system", content: systemPrompt },
-      {
-        role: "user",
-        content: `Conversation history:\n${formattedHistory}\n\nYour answer:`,
-      },
-    ],
-  });
-
-  const npcResponse = chatCompletion.choices[0].message?.content;
-
-  if (!npcResponse) {
-    throw new Error("NPC response is empty");
-  }
-
-  return npcResponse;
-};
-
-export const handleNpcMention = async (
+export const generateNpcResponse = async (
   message: ValidNpcInteractionMessage,
 ) => {
   const { channel } = message;
@@ -90,6 +53,11 @@ export const handleNpcMention = async (
     let webhook: Webhook<WebhookType.Incoming> | undefined;
     try {
       channel.sendTyping();
+      const router = new OpenAI({
+        baseURL: "https://openrouter.ai/api/v1",
+        apiKey: openrouterKey,
+      });
+
       const [webhook, conversationHistory] = await Promise.all([
         channel.createWebhook({
           name: triggeredNpc.name,
@@ -97,13 +65,32 @@ export const handleNpcMention = async (
         message.channel.messages.fetch().then((col) => col.map((msg) => msg)),
       ]);
 
-      const response = await generateNpcResponse(
-        conversationHistory,
-        scenario,
-        triggeredNpc,
-      );
+      const formattedHistory = conversationHistory.map((msg) =>
+        `${msg.author.username} said: "${msg.content}"`
+      ).join("\n");
 
-      await webhook.send(response);
+      const systemPrompt =
+        `You are ${triggeredNpc.name}, ${triggeredNpc.role}. ${triggeredNpc.background}. The overall scenario data is ${scenario}. Answer the messages which "mention" you with the '@' symbol (e.g.: "@Mark what is going on?"). Ignore topics that seem unrelated to an objective end, which is problem resolution. Keep your answer concise and meaningful. When you are done writing your answer, translate it to Brazilian Portuguese and send the translated text only. If you think there is no appropriate answer, return empty text.` as const;
+
+      const chatCompletion = await router.chat.completions.create({
+        model: "tngtech/deepseek-r1t2-chimera:free",
+        messages: [
+          { role: "system", content: systemPrompt },
+          {
+            role: "user",
+            content:
+              `Conversation history:\n${formattedHistory}\n\nYour answer:`,
+          },
+        ],
+      });
+
+      const npcResponse = chatCompletion.choices[0].message?.content;
+
+      if (!npcResponse) {
+        throw new Error("NPC response is empty");
+      }
+
+      await webhook.send(npcResponse);
     } catch (error) {
       console.error(error);
       await channel.send(

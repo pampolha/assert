@@ -76,7 +76,7 @@ export const generateReview = async (
   ).join("\n");
 
   const reviewResponse = await router.chat.completions.create({
-    model: "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
+    model: "tngtech/deepseek-r1t2-chimera:free",
     messages: [
       { role: "system", content: systemPrompt },
       {
