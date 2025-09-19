@@ -107,10 +107,8 @@ export const collectListener = async (
     );
 
     await Promise.all([
-      dmPromises,
-      Promise.all(
-        welcomeMessageArray.map((msg) => textChannel.send(msg)),
-      ),
+      ...dmPromises,
+      ...welcomeMessageArray.map((msg) => textChannel.send(msg)),
       SessionModel.update({
         sessionId: session.sessionId,
         status: "ACTIVE",

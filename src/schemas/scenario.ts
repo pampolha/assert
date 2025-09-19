@@ -26,3 +26,10 @@ export const scenarioSchema = z.object({
   ).min(1, "At least 1 NPC is required"),
   objective: z.string().min(1, "Objective is required"),
 });
+
+export const scenarioPayloadSchema = z.object({
+  action: z.enum(["generateScenario"]),
+});
+export type ScenarioPayload = z.infer<
+  typeof scenarioPayloadSchema
+>;

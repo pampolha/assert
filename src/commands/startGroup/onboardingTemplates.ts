@@ -33,6 +33,6 @@ export const makeDmInstructions = (
   character: ScenarioEntity["characters"][0],
 ) =>
   `# Seu Personagem no grupo de **${sessionOwner?.username}**\n` +
-  `# Cargo ${character.role}\n` +
+  `# Cargo\n${character.role}\n` +
   `# História\n${character.background}\n` +
   `# Informação\n${character.ace}\n`;
