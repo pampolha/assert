@@ -4,19 +4,22 @@ import {
   TextInputBuilder,
   TextInputStyle,
 } from "discord.js";
-import type { ButtonInteraction } from "discord.js";
+import type { ButtonInteraction, TextChannel } from "discord.js";
 import {
   SessionFeedbackModel,
   type SessionParticipantEntity,
 } from "../../table/models.ts";
 import { EmbedBuilder } from "discord.js";
 import { Colors } from "discord.js";
+import { oneHourMs } from "../../lib/constants.ts";
+import { tryDm } from "../../lib/sendDm.ts";
 
 export const collectListener = async (
   collectorInteraction: ButtonInteraction,
   allParticipants: SessionParticipantEntity[],
   sessionId: string,
   feedbackGiverId: string,
+  fallbackChannel: TextChannel,
 ) => {
   const feedbackReceivers = allParticipants.filter(
     (p) => p.participantId !== feedbackGiverId,
@@ -39,11 +42,10 @@ export const collectListener = async (
     );
   });
 
-  const tenMinutesMs = 1000 * 60 * 10;
   await collectorInteraction.showModal(modal);
 
   const modalInteraction = await collectorInteraction.awaitModalSubmit({
-    time: tenMinutesMs,
+    time: oneHourMs,
   });
   await modalInteraction.deferReply({ flags: "Ephemeral" });
 
@@ -60,7 +62,6 @@ export const collectListener = async (
           const receiverUser = await collectorInteraction.client.users.fetch(
             feedbackReceiverId,
           );
-          const receiverDmChannel = await receiverUser.createDM();
 
           await Promise.all(
             [
@@ -70,7 +71,7 @@ export const collectListener = async (
                 feedbackReceiverId,
                 feedbackText,
               }),
-              receiverDmChannel.send({
+              tryDm(receiverUser, {
                 content:
                   "Você recebeu um feedback de uma sessão na qual você participou recentemente!",
                 embeds: [
@@ -79,7 +80,7 @@ export const collectListener = async (
                     .setDescription(feedbackText)
                     .toJSON(),
                 ],
-              }),
+              }, fallbackChannel),
             ],
           );
         }

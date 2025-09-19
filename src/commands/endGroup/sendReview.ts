@@ -1,31 +1,17 @@
-import type { Client, TextChannel } from "discord.js";
+import type { TextChannel } from "discord.js";
 import type { ReviewChannelHistoryMessage } from "../../schemas/review.ts";
 import { generateReview } from "./generateReview.ts";
 import {
   ScenarioModel,
-  type SessionChannelEntity,
   type SessionEntity,
 } from "../../table/models.ts";
+import { tryDm } from "../../lib/sendDm.ts";
 
 export const sendReview = async (
-  client: Client,
   session: SessionEntity,
-  sessionChannels: SessionChannelEntity[],
+  textChannel: TextChannel,
 ) => {
-  const tableTextChannelId =
-    sessionChannels.find((ch) => ch.type === "textChannel")?.channelId || "";
-
-  const [textChannel, scenario] = await Promise.all([
-    (client.channels.cache.get(tableTextChannelId) ||
-      client.channels.fetch(tableTextChannelId)) as
-        | TextChannel
-        | Promise<TextChannel | null>,
-    ScenarioModel.get({ scenarioId: session.scenarioId }),
-  ]);
-
-  if (!textChannel) {
-    throw new Error("Unexpected error: session text channel was not found.");
-  }
+  const scenario = await ScenarioModel.get({ scenarioId: session.scenarioId });
   if (!scenario) {
     throw new Error("Unexpected error: session scenario was not found.");
   }
@@ -50,9 +36,17 @@ export const sendReview = async (
   );
 
   await Promise.allSettled([
-    textChannel.send(reviewContent.overallEvaluation),
-    ...reviewContent.feedbacks.map(async (f) =>
-      (await client.users.createDM(f.userId)).send(f.content)
+    textChannel.send(
+      `# Avaliação da sessão:\n` +
+        `${reviewContent.overallEvaluation}\n\n` +
+        `*Obrigado por participar!*`,
     ),
+    ...reviewContent.feedbacks.map((f) => {
+      const userMessage =
+        `# Avaliação individual da sessão "${textChannel.name}"\n` +
+        `${f.content}\n\n` +
+        `*Obrigado pela participação!*`;
+      return tryDm(f.userId, userMessage, textChannel);
+    }),
   ]);
 };

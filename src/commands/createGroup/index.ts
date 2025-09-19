@@ -5,7 +5,7 @@ import {
   ComponentType,
   SlashCommandBuilder,
 } from "discord.js";
-import type { BotCommand } from "assert-bot";
+import { type BotCommand, client } from "assert-bot";
 import { mainChannelId } from "../../env.ts";
 import { collectListener, endListener } from "./collectorListeners.ts";
 import {
@@ -15,6 +15,8 @@ import {
   type SessionParticipantEntity,
   SessionParticipantModel,
 } from "../../table/models.ts";
+import { oneHourFromNowEpoch, oneHourMs } from "../../lib/constants.ts";
+import { mention } from "../../lib/format.ts";
 
 const command: BotCommand = {
   data: new SlashCommandBuilder()
@@ -64,7 +66,7 @@ const command: BotCommand = {
     }
 
     const scenarioCacheKey = new Date().toISOString().slice(0, 10);
-    let latestCacheScenario = interaction.client.scenarioCache.get(
+    let latestCacheScenario = client.scenarioCache.get(
       scenarioCacheKey,
     );
 
@@ -84,7 +86,7 @@ const command: BotCommand = {
         return;
       }
 
-      interaction.client.scenarioCache.set(
+      client.scenarioCache.set(
         scenarioCacheKey,
         latestScenario,
       );
@@ -93,14 +95,13 @@ const command: BotCommand = {
     }
 
     const sessionId = crypto.randomUUID();
-    const oneHourMs = 60_000 * 60;
-    const oneHourFromNowMs = Date.now() + oneHourMs;
 
+    const oneHourFromNow = oneHourFromNowEpoch();
     const sessionEntity: SessionEntity = {
       sessionId,
       scenarioId: latestCacheScenario.scenarioId,
       status: "FORMING",
-      expiryDate: oneHourFromNowMs,
+      expiryDate: oneHourFromNow,
     };
 
     const participantEntity: SessionParticipantEntity = {
@@ -138,13 +139,14 @@ const command: BotCommand = {
     }
 
     const groupMessage = await interaction.channel?.send({
-      content:
-        `**Grupo de Sessão em Formação**\nDono: <@${interaction.user.id}>\nClique em uma vaga abaixo para entrar:`,
+      content: `**Grupo de Sessão em Formação**\nDono: ${
+        mention(interaction.user)
+      }\nClique em uma vaga abaixo para entrar:`,
       components: [groupMessageActionRow],
     });
     interaction.deleteReply();
 
-    while (Date.now() < oneHourFromNowMs) {
+    while (Date.now() < oneHourFromNow) {
       let collectorInteraction;
       try {
         collectorInteraction = await groupMessage.awaitMessageComponent({

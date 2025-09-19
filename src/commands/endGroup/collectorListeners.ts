@@ -1,5 +1,5 @@
 import { Colors, type CommandInteraction } from "discord.js";
-import type { ButtonInteraction } from "discord.js";
+import type { ButtonInteraction, TextChannel } from "discord.js";
 import {
   SessionChannelModel,
   type SessionEntity,
@@ -8,6 +8,9 @@ import {
 } from "../../table/models.ts";
 import { sendFeedbackForms } from "./sendFeedbackForms.ts";
 import { sendReview } from "./sendReview.ts";
+import { mention, timestamp } from "../../lib/format.ts";
+import { oneHourFromNowEpoch, oneHourMs } from "../../lib/constants.ts";
+import { client } from "assert-bot";
 
 export const collectListener = async (
   commandInteraction: CommandInteraction<"cached">,
@@ -23,20 +26,19 @@ export const collectListener = async (
       sessionId: session.sessionId,
     });
 
-    const oneHourMs = 60_000 * 60;
-    const oneHourFromNowMs = Date.now() + oneHourMs;
+    const oneHourFromNow = oneHourFromNowEpoch();
     await Promise.allSettled([
       collectorInteraction.editReply(
         "O agendamento da deleção de canais foi feito.",
       ),
       collectorInteraction.followUp({
-        content: allParticipants.map((p) => `<@${p.participantId}>`).join(),
+        content: allParticipants.map((p) => mention(p.participantId)).join(),
         embeds: [
           {
             title: "A sessão foi encerrada.",
-            description: `Os canais serão apagados em: <t:${
-              Math.floor(oneHourFromNowMs / 1000)
-            }:F>`,
+            description: `Os canais serão apagados em: ${
+              timestamp(oneHourFromNow)
+            }`,
             color: Colors.Red,
           },
         ],
@@ -48,13 +50,27 @@ export const collectListener = async (
     });
 
     if (session.status === "ACTIVE") {
+      const tableTextChannelId = tableChannels.find((ch) =>
+        ch.type === "textChannel"
+      )?.channelId || "";
+
+      const textChannel =
+        await (client.channels.cache.get(tableTextChannelId) ||
+          client.channels.fetch(tableTextChannelId)) as TextChannel | null;
+
+      if (!textChannel) {
+        throw new Error(
+          "Unexpected error: session text channel was not found.",
+        );
+      }
+
       await Promise.all([
         sendFeedbackForms(
-          collectorInteraction.client,
           session,
           allParticipants,
+          textChannel,
         ),
-        sendReview(collectorInteraction.client, session, tableChannels),
+        sendReview(session, textChannel),
       ]);
     } else if (session.status === "FORMING") {
       const userGroupMessages = commandInteraction.channel?.messages.cache
@@ -97,7 +113,7 @@ export const collectListener = async (
         const errlog = err instanceof Error ? { ...err } : err;
         console.error(
           "An error occured inside the session cleanup callback.",
-          { cleanupScheduledTime: oneHourFromNowMs },
+          { cleanupScheduledTime: oneHourFromNow },
           errlog,
         );
       }

@@ -1,3 +1,4 @@
+import { mention } from "../../lib/format.ts";
 import type {
   ScenarioEntity,
   SessionParticipantEntity,
@@ -23,7 +24,7 @@ export const makeWelcomeMessageArray = (
   }`,
 
   `## Participantes\n${
-    participants.map((p) => `<@${p.participantId}>`)
+    participants.map((p) => mention(p.participantId))
       .join(", ")
   }`,
 ];
