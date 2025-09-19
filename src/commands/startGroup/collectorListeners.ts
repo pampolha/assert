@@ -15,6 +15,7 @@ import {
   createTextChannel,
   createVoiceChannel,
 } from "./channelCreation.ts";
+import { tryDm } from "../../lib/sendDm.ts";
 
 export const collectListener = async (
   commandInteraction: CommandInteraction<"cached">,
@@ -84,33 +85,21 @@ export const collectListener = async (
     const sessionOwner = participants.find((p) => p.role === "owner");
     const dmPromises = characterAssignments.map(
       async ({ participant, character }) => {
-        try {
-          const user = await commandInteraction.client.users.fetch(
-            participant.participantId,
-          );
-          const dmInstructions = makeDmInstructions(
-            sessionOwner,
-            character,
-          );
+        const user = await commandInteraction.client.users.fetch(
+          participant.participantId,
+        );
+        const dmInstructions = makeDmInstructions(
+          sessionOwner,
+          character,
+        );
 
-          await user.send(dmInstructions);
-        } catch (error) {
-          console.error(
-            `Failed to send DM to user ${participant.participantId}:`,
-            error,
-          );
-          await textChannel.send(
-            `<@${participant.participantId}> Não foi possível enviar mensagem privada. Verifique se você permite mensagens de membros do servidor nas configurações de privacidade.`,
-          );
-        }
+        return tryDm(user, dmInstructions, textChannel);
       },
     );
 
     await Promise.all([
-      dmPromises,
-      Promise.all(
-        welcomeMessageArray.map((msg) => textChannel.send(msg)),
-      ),
+      ...dmPromises,
+      ...welcomeMessageArray.map((msg) => textChannel.send(msg)),
       SessionModel.update({
         sessionId: session.sessionId,
         status: "ACTIVE",

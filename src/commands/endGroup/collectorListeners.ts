@@ -1,5 +1,5 @@
-import type { CommandInteraction } from "discord.js";
-import type { ButtonInteraction } from "discord.js";
+import { Colors, type CommandInteraction } from "discord.js";
+import type { ButtonInteraction, TextChannel } from "discord.js";
 import {
   SessionChannelModel,
   type SessionEntity,
@@ -7,10 +7,14 @@ import {
   SessionParticipantModel,
 } from "../../table/models.ts";
 import { sendFeedbackForms } from "./sendFeedbackForms.ts";
+import { sendReview } from "./sendReview.ts";
+import { mention, timestamp } from "../../lib/format.ts";
+import { oneHourFromNowEpoch, oneHourMs } from "../../lib/constants.ts";
+import { client } from "assert-bot";
 
 export const collectListener = async (
-  commandInteraction: CommandInteraction,
-  collectorInteraction: ButtonInteraction,
+  commandInteraction: CommandInteraction<"cached">,
+  collectorInteraction: ButtonInteraction<"cached">,
   session: SessionEntity,
 ) => {
   if (!commandInteraction.guild) {
@@ -18,59 +22,102 @@ export const collectListener = async (
   }
 
   if (collectorInteraction.customId === "confirm_end_session") {
-    const userGroupMessages = commandInteraction.channel?.messages.cache.filter(
-      (msg) =>
-        msg.author === commandInteraction.client.user &&
-        msg.mentions.users.has(collectorInteraction.user.id),
-    );
-
-    await Promise.all([
-      collectorInteraction.editReply({
-        content: "Encerrando sessão...",
-        components: [],
-      }),
-      userGroupMessages?.map((msg) =>
-        msg.edit({ content: "*Sessão encerrada.*", components: [] })
-      ),
-      SessionModel.update({
-        sessionId: session.sessionId,
-        status: "ENDED",
-      }),
-    ]);
-
-    const channels = await SessionChannelModel.find({
+    const allParticipants = await SessionParticipantModel.find({
       sessionId: session.sessionId,
     });
 
-    const guildChannels = commandInteraction.guild.channels;
-    for (const channel of channels) {
-      const fetchedChannel = guildChannels.cache.get(channel.channelId) ||
-        await guildChannels.fetch(channel.channelId);
+    const oneHourFromNow = oneHourFromNowEpoch();
+    await Promise.allSettled([
+      collectorInteraction.editReply(
+        "O agendamento da deleção de canais foi feito.",
+      ),
+      collectorInteraction.followUp({
+        content: allParticipants.map((p) => mention(p.participantId)).join(),
+        embeds: [
+          {
+            title: "A sessão foi encerrada.",
+            description: `Os canais serão apagados em: ${
+              timestamp(oneHourFromNow)
+            }`,
+            color: Colors.Red,
+          },
+        ],
+      }),
+    ]);
 
-      if (!fetchedChannel) {
-        console.error(
-          `Could not get stored channel. ${{ session }}, ${{ channel }}`,
-        );
-      } else {
-        await fetchedChannel.delete("Session ended");
-      }
-    }
+    const tableChannels = await SessionChannelModel.find({
+      sessionId: session.sessionId,
+    });
 
     if (session.status === "ACTIVE") {
-      const allParticipants = await SessionParticipantModel.find({
-        sessionId: session.sessionId,
-      });
+      const tableTextChannelId = tableChannels.find((ch) =>
+        ch.type === "textChannel"
+      )?.channelId || "";
 
-      await sendFeedbackForms(
-        collectorInteraction.client,
-        session,
-        allParticipants,
+      const textChannel =
+        await (client.channels.cache.get(tableTextChannelId) ||
+          client.channels.fetch(tableTextChannelId)) as TextChannel | null;
+
+      if (!textChannel) {
+        throw new Error(
+          "Unexpected error: session text channel was not found.",
+        );
+      }
+
+      await Promise.all([
+        sendFeedbackForms(
+          session,
+          allParticipants,
+          textChannel,
+        ),
+        sendReview(session, textChannel),
+      ]);
+    } else if (session.status === "FORMING") {
+      const userGroupMessages = commandInteraction.channel?.messages.cache
+        .filter(
+          (msg) =>
+            msg.author === commandInteraction.client.user &&
+            msg.mentions.users.has(collectorInteraction.user.id),
+        );
+      userGroupMessages?.map((msg) =>
+        msg.edit({ content: "*Sessão encerrada.*", components: [] }).catch(
+          console.error,
+        )
       );
     }
 
-    collectorInteraction.editReply({
-      content: "Sessão encerrada com sucesso!",
-    }).catch(() => null);
+    setTimeout(async () => {
+      try {
+        const channelDeletionPromises = tableChannels.map(async (channel) => {
+          const fetchedChannel =
+            collectorInteraction.guild.channels.cache.get(channel.channelId) ||
+            await collectorInteraction.guild.channels.fetch(channel.channelId);
+
+          if (!fetchedChannel) {
+            console.error(
+              `Could not get stored channel. ${{ session }}, ${{ channel }}`,
+            );
+          } else {
+            return fetchedChannel.delete("Session ended");
+          }
+        });
+
+        await Promise.allSettled([
+          await SessionModel.update({
+            sessionId: session.sessionId,
+            status: "ENDED",
+          }),
+          ...channelDeletionPromises,
+        ]);
+      } catch (err) {
+        const errlog = err instanceof Error ? { ...err } : err;
+        console.error(
+          "An error occured inside the session cleanup callback.",
+          { cleanupScheduledTime: oneHourFromNow },
+          errlog,
+        );
+      }
+    }, oneHourMs);
   } else if (collectorInteraction.customId === "cancel_end_session") {
     await collectorInteraction.editReply({
       content: "Operação de encerramento de sessão cancelada.",

@@ -17,7 +17,7 @@ const command: BotCommand = {
     ),
 
   async execute(interaction) {
-    if (!interaction.guild) {
+    if (!interaction.inCachedGuild()) {
       await interaction.editReply({
         content: "Este comando só pode ser usado em um servidor (guilda).",
       });

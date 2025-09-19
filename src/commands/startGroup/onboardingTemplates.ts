@@ -1,3 +1,4 @@
+import { mention } from "../../lib/format.ts";
 import type {
   ScenarioEntity,
   SessionParticipantEntity,
@@ -23,7 +24,7 @@ export const makeWelcomeMessageArray = (
   }`,
 
   `## Participantes\n${
-    participants.map((p) => `<@${p.participantId}>`)
+    participants.map((p) => mention(p.participantId))
       .join(", ")
   }`,
 ];
@@ -33,6 +34,6 @@ export const makeDmInstructions = (
   character: ScenarioEntity["characters"][0],
 ) =>
   `# Seu Personagem no grupo de **${sessionOwner?.username}**\n` +
-  `# Cargo ${character.role}\n` +
+  `# Cargo\n${character.role}\n` +
   `# História\n${character.background}\n` +
   `# Informação\n${character.ace}\n`;

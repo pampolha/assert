@@ -3,21 +3,22 @@ import type {
   SessionEntity,
   SessionParticipantEntity,
 } from "../../table/models.ts";
-import type { Client } from "discord.js";
+import type { TextChannel } from "discord.js";
 import { collectListener } from "./feedbackCollectorListeners.ts";
 import { ComponentType } from "discord.js";
+import { oneHourMs } from "../../lib/constants.ts";
+import { tryDm } from "../../lib/sendDm.ts";
+import { client } from "assert-bot";
 
 export const sendFeedbackForms = async (
-  client: Client,
   session: SessionEntity,
   allParticipants: SessionParticipantEntity[],
+  textChannel: TextChannel,
 ) => {
   if (allParticipants.length <= 1) return;
 
   await Promise.all(allParticipants.map(async (participant) => {
     const user = await client.users.fetch(participant.participantId);
-
-    const dmChannel = await user.createDM();
 
     const feedbackButton = new ButtonBuilder()
       .setCustomId(
@@ -29,14 +30,13 @@ export const sendFeedbackForms = async (
     const row = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(feedbackButton);
 
-    const message = await dmChannel.send({
+    const [sentToDm, message] = await tryDm(user, {
       content:
         `Uma sessão em que você participou foi encerrada. Por favor, use o botão abaixo para dar seu feedback anônimo sobre os participantes da sessão.`,
       components: [row],
-    });
+    }, textChannel);
 
-    const oneHourMs = 60_000 * 60;
-
+    if (!sentToDm) return;
     let collectorInteraction;
     try {
       collectorInteraction = await message.awaitMessageComponent({
@@ -58,6 +58,7 @@ export const sendFeedbackForms = async (
         allParticipants,
         session.sessionId,
         participant.participantId,
+        textChannel,
       );
       await message.edit({ content: "*Feedback enviado.*" });
     } catch (err) {

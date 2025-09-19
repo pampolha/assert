@@ -84,6 +84,16 @@ const schema = {
       created: { type: Date, timestamp: true },
       updated: { type: Date, timestamp: true },
     },
+    SessionReview: {
+      sessionId: { type: String, required: true },
+      overallEvaluation: { type: String, required: true },
+      PK: { type: String, value: "SESSION#${sessionId}" },
+      SK: { type: String, value: "REVIEW" },
+      GS1PK: { type: String, value: "REVIEW" },
+      GS1SK: { type: String, value: "SESSION#${sessionId}" },
+      created: { type: Date, timestamp: true },
+      updated: { type: Date, timestamp: true },
+    },
     Scenario: {
       scenarioId: { type: String, required: true },
       corporate: {
@@ -153,9 +163,11 @@ export type SessionChannelEntity = Entity<typeof schema.models.SessionChannel>;
 export type SessionFeedbackEntity = Entity<
   typeof schema.models.SessionFeedback
 >;
+export type SessionReviewEntity = Entity<typeof schema.models.SessionReview>;
 
 export const SessionModel = table.getModel("Session");
 export const ScenarioModel = table.getModel("Scenario");
 export const SessionParticipantModel = table.getModel("SessionParticipant");
 export const SessionChannelModel = table.getModel("SessionChannel");
 export const SessionFeedbackModel = table.getModel("SessionFeedback");
+export const SessionReviewModel = table.getModel("SessionReview");

@@ -30,7 +30,7 @@ export interface BotCommand {
   execute: (interaction: CommandInteraction) => Promise<void>;
 }
 
-const client = new Client({
+export const client: Client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
