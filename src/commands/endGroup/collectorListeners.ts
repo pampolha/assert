@@ -28,8 +28,15 @@ export const collectListener = async (
 
     const oneHourFromNow = oneHourFromNowEpoch();
     await Promise.allSettled([
+      await SessionModel.update({
+        sessionId: session.sessionId,
+        status: "ENDED",
+      }),
       collectorInteraction.editReply(
-        "O agendamento da deleção de canais foi feito.",
+        {
+          content: "O agendamento da deleção de canais foi feito.",
+          components: [],
+        },
       ),
       collectorInteraction.followUp({
         content: allParticipants.map((p) => mention(p.participantId)).join(),
@@ -88,27 +95,25 @@ export const collectListener = async (
 
     setTimeout(async () => {
       try {
-        const channelDeletionPromises = tableChannels.map(async (channel) => {
-          const fetchedChannel =
-            collectorInteraction.guild.channels.cache.get(channel.channelId) ||
-            await collectorInteraction.guild.channels.fetch(channel.channelId);
+        await Promise.all(
+          tableChannels.map(async (channel) => {
+            const fetchedChannel =
+              collectorInteraction.guild.channels.cache.get(
+                channel.channelId,
+              ) ||
+              await collectorInteraction.guild.channels.fetch(
+                channel.channelId,
+              );
 
-          if (!fetchedChannel) {
-            console.error(
-              `Could not get stored channel. ${{ session }}, ${{ channel }}`,
-            );
-          } else {
-            return fetchedChannel.delete("Session ended");
-          }
-        });
-
-        await Promise.allSettled([
-          await SessionModel.update({
-            sessionId: session.sessionId,
-            status: "ENDED",
+            if (!fetchedChannel) {
+              console.error(
+                `Could not get stored channel. ${{ session }}, ${{ channel }}`,
+              );
+            } else {
+              return fetchedChannel.delete("Session ended");
+            }
           }),
-          ...channelDeletionPromises,
-        ]);
+        );
       } catch (err) {
         const errlog = err instanceof Error ? { ...err } : err;
         console.error(
