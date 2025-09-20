@@ -5,10 +5,8 @@
   "exports": "./src/index.ts",
   "tasks": {
     "start": "deno run --allow-all --env-file src/index.ts",
-    "deploy-commands-global": "deno run --allow-all --env-file src/scripts/deployCommands.ts",
-    "deploy-commands-debug": "deno run --allow-all --env-file src/scripts/deployCommands.ts --debug",
-    "generate-scenario": "deno run --allow-all --env-file src/scripts/generateScenario.ts",
-    "dev": "deno run --watch --allow-all --env-file src/index.ts"
+    "dev": "deno run --watch --allow-all --env-file src/index.ts",
+    "build": "deno compile --allow-env --env-file --allow-read --allow-net --include=src --target=x86_64-unknown-linux-gnu --output=bin/assert src/index.ts"
   },
   "imports": {
     "@aws-sdk/client-dynamodb": "npm:@aws-sdk/client-dynamodb@^3.848.0",
