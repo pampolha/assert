@@ -88,14 +88,44 @@ resource "aws_security_group" "assert_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+resource "aws_iam_role" "assert_role" {
+  name = "assert-instance-role"
+  assume_role_policy = jsonencode(
+    {
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Effect" : "Allow",
+          "Principal" : {
+            "Service" : "ec2.amazonaws.com"
+          },
+          "Action" : "sts:AssumeRole"
+        }
+      ]
+    }
+  )
+}
+
+resource "aws_iam_role_policy_attachment" "cw_agent" {
+  role       = aws_iam_role.assert_role.name
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+}
+
+resource "aws_iam_instance_profile" "assert_profile" {
+  name = "assert-instance-profile"
+  role = aws_iam_role.assert_role.name
+}
+
 resource "aws_instance" "assert" {
-  # Debian 13 (20250814-2204)
-  ami                    = "ami-0bb7d855677353076"
+  # Amazon Linux 2023 kernel-6.12
+  ami                    = "ami-0b1dcb5abc47cd8b5"
   instance_type          = "t3.micro"
   subnet_id              = data.aws_subnets.default.ids[0]
   vpc_security_group_ids = [aws_security_group.assert_sg.id]
   key_name               = "assert-key"
+  iam_instance_profile   = aws_iam_instance_profile.assert_profile.name
 }
+
 
 output "instance_public_ip" {
   value = aws_instance.assert.public_ip
