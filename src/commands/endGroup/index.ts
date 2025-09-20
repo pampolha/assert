@@ -79,7 +79,7 @@ const command: BotCommand = {
         componentType: ComponentType.Button,
       });
     } catch {
-      interaction.editReply({
+      await interaction.editReply({
         content: "Tempo esgotado para tomar decisão de encerramento de sessão.",
         components: [],
       });

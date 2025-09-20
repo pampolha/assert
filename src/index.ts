@@ -18,6 +18,7 @@ import type {
 } from "discord.js";
 import type { TextChannel } from "discord.js";
 import type { ScenarioEntity } from "./table/models.ts";
+import { inspectError } from "./lib/log.ts";
 
 export type ValidNpcInteractionMessage = Message<true> & {
   channel: TextChannel;
@@ -95,8 +96,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
       return;
     }
 
-    await interaction.deferReply({ flags: "Ephemeral" });
-    return command.execute(interaction);
+    try {
+      await interaction.deferReply({ flags: "Ephemeral" });
+      await command.execute(interaction);
+    } catch (err) {
+      inspectError(err);
+    }
   }
 });
 
@@ -110,7 +115,7 @@ client.on(Events.MessageCreate, (message) => {
     msg.content.includes("@");
 
   if (isValidMessage(message)) {
-    generateNpcResponse(message);
+    generateNpcResponse(message).catch(inspectError);
   }
 });
 

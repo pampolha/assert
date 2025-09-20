@@ -11,6 +11,7 @@ import { sendReview } from "./sendReview.ts";
 import { mention, timestamp } from "../../lib/format.ts";
 import { oneHourFromNowEpoch, oneHourMs } from "../../lib/constants.ts";
 import { client } from "assert-bot";
+import { inspectError } from "../../lib/log.ts";
 
 export const collectListener = async (
   commandInteraction: CommandInteraction<"cached">,
@@ -88,40 +89,35 @@ export const collectListener = async (
         );
       userGroupMessages?.map((msg) =>
         msg.edit({ content: "*Sessão encerrada.*", components: [] }).catch(
-          console.error,
+          inspectError,
         )
       );
     }
 
     setTimeout(async () => {
-      try {
-        await Promise.all(
-          tableChannels.map(async (channel) => {
-            const fetchedChannel =
-              collectorInteraction.guild.channels.cache.get(
-                channel.channelId,
-              ) ||
-              await collectorInteraction.guild.channels.fetch(
-                channel.channelId,
-              );
+      await Promise.all(
+        tableChannels.map(async (channel) => {
+          const fetchedChannel = collectorInteraction.guild.channels.cache.get(
+            channel.channelId,
+          ) ||
+            await collectorInteraction.guild.channels.fetch(
+              channel.channelId,
+            );
 
-            if (!fetchedChannel) {
-              console.error(
-                `Could not get stored channel. ${{ session }}, ${{ channel }}`,
-              );
-            } else {
-              return fetchedChannel.delete("Session ended");
-            }
-          }),
-        );
-      } catch (err) {
-        const errlog = err instanceof Error ? { ...err } : err;
-        console.error(
-          "An error occured inside the session cleanup callback.",
+          if (!fetchedChannel) {
+            console.error(
+              `Could not get stored channel. ${{ session }}, ${{ channel }}`,
+            );
+          } else {
+            return fetchedChannel.delete("Session ended");
+          }
+        }),
+      ).catch((err) =>
+        inspectError(
+          err,
           { cleanupScheduledTime: oneHourFromNow },
-          errlog,
-        );
-      }
+        )
+      );
     }, oneHourMs);
   } else if (collectorInteraction.customId === "cancel_end_session") {
     await collectorInteraction.editReply({

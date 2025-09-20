@@ -9,6 +9,7 @@ import { ComponentType } from "discord.js";
 import { oneHourMs } from "../../lib/constants.ts";
 import { tryDm } from "../../lib/sendDm.ts";
 import { client } from "assert-bot";
+import { inspectError } from "../../lib/log.ts";
 
 export const sendFeedbackForms = async (
   session: SessionEntity,
@@ -43,7 +44,7 @@ export const sendFeedbackForms = async (
         componentType: ComponentType.Button,
       });
 
-      return feedbackCollectListener(
+      await feedbackCollectListener(
         collectorInteraction,
         allParticipants,
         session.sessionId,
@@ -51,7 +52,7 @@ export const sendFeedbackForms = async (
         textChannel,
       );
     } catch (err) {
-      console.log(err);
+      inspectError(err);
     } finally {
       await message.delete();
     }

@@ -7,6 +7,7 @@ import {
 import { OpenAI } from "openai";
 import type { Webhook, WebhookType } from "discord.js";
 import { openrouterKey } from "../env.ts";
+import { inspectError } from "../lib/log.ts";
 
 export const generateNpcResponse = async (
   message: ValidNpcInteractionMessage,
@@ -92,12 +93,12 @@ export const generateNpcResponse = async (
 
       await webhook.send(npcResponse);
     } catch (error) {
-      console.error(error);
+      inspectError(error);
       await channel.send(
         "Ocorreu um erro ao processar a resposta do NPC.",
       );
     } finally {
-      webhook?.delete();
+      await webhook?.delete();
     }
   }
 };

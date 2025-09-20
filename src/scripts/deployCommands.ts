@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import type { BotCommand } from "assert-bot";
 import { botClientId, botToken, debugGuildId } from "../env.ts";
 import process from "node:process";
+import { inspectError } from "../lib/log.ts";
 
 const isDebugDeployment = process.argv.includes("--debug");
 
@@ -84,6 +85,6 @@ const rest = new REST().setToken(botToken);
     );
     console.table(data);
   } catch (error) {
-    console.error(error);
+    inspectError(error);
   }
 })();
