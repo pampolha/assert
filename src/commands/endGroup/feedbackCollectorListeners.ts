@@ -14,20 +14,21 @@ import { Colors } from "discord.js";
 import { oneHourMs } from "../../lib/constants.ts";
 import { tryDm } from "../../lib/sendDm.ts";
 
-export const collectListener = async (
+export const feedbackCollectListener = async (
   collectorInteraction: ButtonInteraction,
   allParticipants: SessionParticipantEntity[],
   sessionId: string,
   feedbackGiverId: string,
-  fallbackChannel: TextChannel,
+  sessionChannel: TextChannel,
 ) => {
   const feedbackReceivers = allParticipants.filter(
     (p) => p.participantId !== feedbackGiverId,
   );
+  const sessionName = sessionChannel.name.replace("-chat", " ");
 
   const modal = new ModalBuilder()
     .setCustomId(`feedback_modal_submit_${sessionId}_${feedbackGiverId}`)
-    .setTitle("Feedback da sessão")
+    .setTitle(`Feedback de "${sessionName}"`)
     .addComponents(
       new ActionRowBuilder<TextInputBuilder>().addComponents(
         feedbackReceivers.map((receiver) =>
@@ -56,40 +57,37 @@ export const collectListener = async (
             "feedback_input_",
             "",
           );
+
           const feedbackText = component.value.trim();
+          if (!feedbackText) return;
 
-          if (feedbackText) {
-            const receiverUser = await collectorInteraction.client.users.fetch(
-              feedbackReceiverId,
-            );
+          const receiverUser = await collectorInteraction.client.users.fetch(
+            feedbackReceiverId,
+          );
 
-            await Promise.all(
-              [
-                SessionFeedbackModel.create({
-                  sessionId,
-                  feedbackGiverId,
-                  feedbackReceiverId,
-                  feedbackText,
-                }),
-                tryDm(receiverUser, {
-                  content:
-                    `Você recebeu um feedback da sessão no canal ${fallbackChannel.name}!`,
-                  embeds: [
-                    new EmbedBuilder()
-                      .setColor(Colors.Aqua)
-                      .setDescription(feedbackText)
-                      .toJSON(),
-                  ],
-                }, fallbackChannel),
-              ],
-            );
-          }
+          await Promise.all(
+            [
+              SessionFeedbackModel.create({
+                sessionId,
+                feedbackGiverId,
+                feedbackReceiverId,
+                feedbackText,
+              }),
+              tryDm(receiverUser, {
+                content: `Você recebeu um feedback da sessão "${sessionName}"!`,
+                embeds: [
+                  new EmbedBuilder()
+                    .setColor(Colors.Aqua)
+                    .setDescription(feedbackText)
+                    .toJSON(),
+                ],
+              }, sessionChannel),
+            ],
+          );
         }
       })
     ),
   );
 
-  await modalInteraction.editReply({
-    content: "Obrigado! Seu feedback foi registrado.",
-  });
+  await modalInteraction.deleteReply();
 };
