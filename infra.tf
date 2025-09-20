@@ -111,6 +111,11 @@ resource "aws_iam_role_policy_attachment" "cw_agent" {
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
 }
 
+resource "aws_iam_role_policy_attachment" "dynamo" {
+  role       = aws_iam_role.assert_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess_v2"
+}
+
 resource "aws_iam_instance_profile" "assert_profile" {
   name = "assert-instance-profile"
   role = aws_iam_role.assert_role.name
