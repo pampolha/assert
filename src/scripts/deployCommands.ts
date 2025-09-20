@@ -33,7 +33,7 @@ async function loadCommands() {
     .filter((dirent) => dirent.isDirectory())
     .map((dirent) => dirent.name);
 
-  for (const dir of commandDirs) {
+  await Promise.all(commandDirs.map(async (dir) => {
     const indexPath = path.join(commandsPath, dir, "index.ts");
 
     if (fs.existsSync(indexPath)) {
@@ -49,7 +49,7 @@ async function loadCommands() {
     } else {
       console.warn(`Command at ${indexPath} does not have an "index.ts" file`);
     }
-  }
+  }));
 }
 
 const rest = new REST().setToken(botToken);

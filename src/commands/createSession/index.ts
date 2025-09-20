@@ -17,6 +17,7 @@ import {
 } from "../../table/models.ts";
 import { oneHourFromNowEpoch, oneHourMs } from "../../lib/constants.ts";
 import { mention } from "../../lib/format.ts";
+import { inspectError } from "../../lib/log.ts";
 
 const command: BotCommand = {
   data: new SlashCommandBuilder()
@@ -118,25 +119,23 @@ const command: BotCommand = {
       SessionParticipantModel.create(participantEntity),
     ]);
 
-    const sessionMessageActionRow = new ActionRowBuilder<ButtonBuilder>();
     const sessionSize = 4;
-    for (let index = 0; index < sessionSize; index++) {
+    const buttons = Array.from({ length: sessionSize }, (_, index) => {
       if (index < sessionSize - 1) {
-        sessionMessageActionRow.addComponents(
-          new ButtonBuilder()
-            .setCustomId(`spot-${index}`)
-            .setLabel("Vaga")
-            .setStyle(ButtonStyle.Primary),
-        );
+        return new ButtonBuilder()
+          .setCustomId(`spot-${index}`)
+          .setLabel("Vaga")
+          .setStyle(ButtonStyle.Primary);
       } else {
-        sessionMessageActionRow.addComponents(
-          new ButtonBuilder()
-            .setCustomId("session-spot-leave")
-            .setLabel("Sair")
-            .setStyle(ButtonStyle.Danger),
-        );
+        return new ButtonBuilder()
+          .setCustomId("session-spot-leave")
+          .setLabel("Sair")
+          .setStyle(ButtonStyle.Danger);
       }
-    }
+    });
+
+    const sessionMessageActionRow = new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(...buttons);
 
     const sessionMessage = await interaction.channel?.send({
       content: `**Sessão em formação**\nDono: ${
@@ -146,37 +145,37 @@ const command: BotCommand = {
     });
     interaction.deleteReply();
 
-    while (Date.now() < oneHourFromNow) {
-      let collectorInteraction;
+    const interactionCollector = sessionMessage.createMessageComponentCollector(
+      {
+        componentType: ComponentType.Button,
+        time: oneHourMs,
+      },
+    );
+
+    interactionCollector.on("collect", async (collectorInteraction) => {
       try {
-        collectorInteraction = await sessionMessage.awaitMessageComponent({
-          componentType: ComponentType.Button,
-          time: oneHourMs,
+        await collectorInteraction.deferUpdate();
+        await collectListener({
+          commandInteraction: interaction,
+          collectorInteraction,
+          sessionMessageActionRow,
+          sessionId,
         });
       } catch (err) {
-        if (err instanceof Error) {
-          if (err.message.includes("messageDelete")) {
-            return;
-          }
-
-          await endListener({
-            sessionMessage,
-            sessionMessageActionRow,
-            commandInteraction: interaction,
-          });
+        if (err instanceof Error && err.message.includes("messageDelete")) {
           return;
         }
-        throw err;
-      }
 
-      await collectorInteraction.deferUpdate();
-      await collectListener({
-        commandInteraction: interaction,
-        collectorInteraction,
+        inspectError(err);
+      }
+    });
+
+    interactionCollector.on("end", () =>
+      endListener({
+        sessionMessage,
         sessionMessageActionRow,
-        sessionId,
-      });
-    }
+        commandInteraction: interaction,
+      }).catch(inspectError));
   },
 };
 
