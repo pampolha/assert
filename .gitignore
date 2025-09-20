@@ -1,9 +1,11 @@
 # custom
 *.env
 .terraform
+.*.plan
 terraform.tfstate*
 *.zip
 .tfvars
+bin
 
 # Logs
 logs

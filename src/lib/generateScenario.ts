@@ -63,7 +63,7 @@ The response shall be a valid JSON object with the following attributes:
 5. FINAL INSTRUCTION FOR THE LLM:
 Draw inspiration from real corporate scandals and tech industry controversies. Create scenarios that genuinely test players' moral compasses under extreme pressure while helping them develop crucial professional communication skills. Focus on situations that require maintaining composure under pressure while clearly and respectfully asserting one's position. When complete, translate the entire response to Brazilian Portuguese maintaining all technical and corporate terminology.` as const;
 
-(async () => {
+export const generateScenario = async () => {
   const router = new OpenAI({
     baseURL: "https://openrouter.ai/api/v1",
     apiKey: openrouterKey,
@@ -102,4 +102,4 @@ Draw inspiration from real corporate scandals and tech industry controversies. C
     scenarioId: crypto.randomUUID(),
     ...parsedContent,
   });
-})();
+};

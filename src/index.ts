@@ -6,7 +6,6 @@ import {
   Partials,
 } from "discord.js";
 import path from "node:path";
-import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import { botToken, mainChannelId } from "./env.ts";
 import { generateNpcResponse } from "./middleware/generateNpcResponse.ts";
@@ -19,6 +18,9 @@ import type {
 import type { TextChannel } from "discord.js";
 import type { ScenarioEntity } from "./table/models.ts";
 import { inspectError } from "./lib/log.ts";
+import { loadCommands } from "./middleware/loadCommands.ts";
+import { oneDayMs } from "./lib/constants.ts";
+import { generateScenario } from "./lib/generateScenario.ts";
 
 export type ValidNpcInteractionMessage = Message<true> & {
   channel: TextChannel;
@@ -52,37 +54,18 @@ client.commands = new Collection<string, BotCommand>();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 const commandsPath = path.join(__dirname, "commands");
 
-async function loadCommands() {
-  const commandDirs = fs
-    .readdirSync(commandsPath, { withFileTypes: true })
-    .filter((dirent) => dirent.isDirectory())
-    .map((dirent) => dirent.name);
-
-  await Promise.all(commandDirs.map(async (dir) => {
-    const indexPath = path.join(commandsPath, dir, "index.ts");
-
-    if (fs.existsSync(indexPath)) {
-      const command: BotCommand = (await import(indexPath)).default;
-
-      if ("data" in command && "execute" in command) {
-        client.commands.set(command.data.name, command);
-      } else {
-        console.warn(
-          `Command at ${indexPath} does not have "data" and/or "execute" properties.`,
-        );
-      }
-    } else {
-      console.warn(`Command at ${indexPath} does not have an "index.ts" file`);
-    }
-  }));
-}
-
-client.once(Events.ClientReady, async (c) => {
-  await loadCommands();
-  console.log(`Pronto! Logado como ${c.user.tag}`);
+client.once(Events.ClientReady, async () => {
+  try {
+    await loadCommands(commandsPath);
+    setTimeout(() => {
+      generateScenario().catch(inspectError);
+    }, oneDayMs);
+    console.log("Client is ready");
+  } catch (err) {
+    inspectError(err);
+  }
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
