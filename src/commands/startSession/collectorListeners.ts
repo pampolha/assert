@@ -25,7 +25,7 @@ export const collectListener = async (
   participants: SessionParticipantEntity[],
 ) => {
   if (collectorInteraction.customId === "confirm_start_session") {
-    const userGroupMessage =
+    const userSessionMessage =
       (await commandInteraction.channel?.messages.fetch())?.find(
         (msg) =>
           msg.author === commandInteraction.client.user &&
@@ -37,7 +37,7 @@ export const collectListener = async (
         content: "Preparando a sessão...",
         components: [],
       }),
-      userGroupMessage?.delete().catch(inspectError),
+      userSessionMessage?.delete().catch(inspectError),
     ]);
 
     const scenario = await ScenarioModel.get({

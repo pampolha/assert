@@ -11,9 +11,9 @@ import { collectListener } from "./collectorListeners.ts";
 
 const command: BotCommand = {
   data: new SlashCommandBuilder()
-    .setName("encerrar-grupo")
+    .setName("encerrar-sessao")
     .setDescription(
-      "Encerra o cenário atual no qual esse comando foi chamado ou a formação de grupo atual.",
+      "Encerra a sessão (em formação ou ativa) da qual você é dono.",
     ),
 
   async execute(interaction) {
@@ -46,7 +46,7 @@ const command: BotCommand = {
 
     if (!userOwnedSession) {
       await interaction.editReply({
-        content: "Você não é o dono de nenhum grupo ativo ou em formação.",
+        content: "Você não possui uma sessão ativa ou em formação.",
       });
       return;
     }
@@ -65,8 +65,7 @@ const command: BotCommand = {
       .addComponents(cancelButton, confirmButton);
 
     const reply = await interaction.editReply({
-      content:
-        "Tem certeza de que deseja encerrar esta sessão? Todos os canais associados serão excluídos.",
+      content: "Tem certeza de que deseja encerrar esta sessão?",
       components: [row],
     });
 

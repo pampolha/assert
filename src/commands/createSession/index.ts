@@ -20,8 +20,8 @@ import { mention } from "../../lib/format.ts";
 
 const command: BotCommand = {
   data: new SlashCommandBuilder()
-    .setName("criar-grupo")
-    .setDescription("Inicia a formação de um grupo."),
+    .setName("criar-sessao")
+    .setDescription("Inicia a formação de uma sessão."),
 
   async execute(interaction) {
     if (
@@ -60,7 +60,7 @@ const command: BotCommand = {
 
     if (userAlreadyHasActiveOrFormingSession) {
       await interaction.editReply({
-        content: "Você já possui um grupo em formação ou ativo.",
+        content: "Você já possui uma sessão em formação ou ativa.",
       });
       return;
     }
@@ -118,38 +118,38 @@ const command: BotCommand = {
       SessionParticipantModel.create(participantEntity),
     ]);
 
-    const groupMessageActionRow = new ActionRowBuilder<ButtonBuilder>();
-    const groupSize = 4;
-    for (let index = 0; index < groupSize; index++) {
-      if (index < groupSize - 1) {
-        groupMessageActionRow.addComponents(
+    const sessionMessageActionRow = new ActionRowBuilder<ButtonBuilder>();
+    const sessionSize = 4;
+    for (let index = 0; index < sessionSize; index++) {
+      if (index < sessionSize - 1) {
+        sessionMessageActionRow.addComponents(
           new ButtonBuilder()
             .setCustomId(`spot-${index}`)
             .setLabel("Vaga")
             .setStyle(ButtonStyle.Primary),
         );
       } else {
-        groupMessageActionRow.addComponents(
+        sessionMessageActionRow.addComponents(
           new ButtonBuilder()
-            .setCustomId("group-spot-leave")
+            .setCustomId("session-spot-leave")
             .setLabel("Sair")
             .setStyle(ButtonStyle.Danger),
         );
       }
     }
 
-    const groupMessage = await interaction.channel?.send({
-      content: `**Grupo de Sessão em Formação**\nDono: ${
+    const sessionMessage = await interaction.channel?.send({
+      content: `**Sessão em formação**\nDono: ${
         mention(interaction.user)
       }\nClique em uma vaga abaixo para entrar:`,
-      components: [groupMessageActionRow],
+      components: [sessionMessageActionRow],
     });
     interaction.deleteReply();
 
     while (Date.now() < oneHourFromNow) {
       let collectorInteraction;
       try {
-        collectorInteraction = await groupMessage.awaitMessageComponent({
+        collectorInteraction = await sessionMessage.awaitMessageComponent({
           componentType: ComponentType.Button,
           time: oneHourMs,
         });
@@ -160,8 +160,8 @@ const command: BotCommand = {
           }
 
           await endListener({
-            groupMessage,
-            groupMessageActionRow,
+            sessionMessage,
+            sessionMessageActionRow,
             commandInteraction: interaction,
           });
           return;
@@ -173,7 +173,7 @@ const command: BotCommand = {
       await collectListener({
         commandInteraction: interaction,
         collectorInteraction,
-        groupMessageActionRow,
+        sessionMessageActionRow,
         sessionId,
       });
     }

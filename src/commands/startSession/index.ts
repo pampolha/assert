@@ -12,9 +12,9 @@ import type { BotCommand } from "assert-bot";
 
 const command: BotCommand = {
   data: new SlashCommandBuilder()
-    .setName("iniciar-grupo")
+    .setName("iniciar-sessão")
     .setDescription(
-      "Inicia a sessão com os participantes atuais do grupo em formação.",
+      "Inicia a sessão com os participantes atuais da formação.",
     ),
 
   async execute(interaction) {
@@ -48,7 +48,7 @@ const command: BotCommand = {
 
     if (!session) {
       await interaction.editReply({
-        content: "Você não é o dono de nenhum grupo em formação.",
+        content: "Você não possui nenhuma sessão em formação",
       });
       return;
     }

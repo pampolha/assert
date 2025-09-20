@@ -18,7 +18,7 @@ export const createCategory = (
   participantIds: string[],
 ) =>
   commandInteraction.guild.channels.create({
-    name: `Sessão de Simulação - ${commandInteraction.user.username}`,
+    name: `Sessão de ${commandInteraction.user.username}`,
     type: ChannelType.GuildCategory,
     permissionOverwrites: [
       {
@@ -37,7 +37,7 @@ export const createCategory = (
         ],
       },
     ],
-    reason: `Nova sessão de simulação para ${commandInteraction.user.username}`,
+    reason: `Nova sessão de ${commandInteraction.user.username}`,
   });
 
 export const createTextChannel = (

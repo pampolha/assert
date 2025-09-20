@@ -14,20 +14,20 @@ import {
 } from "../../table/models.ts";
 
 const getUpdatedButtonRow = (
-  { sessionMembers, groupMessageActionRow, collectorInteraction }: {
+  { sessionMembers, sessionMessageActionRow, collectorInteraction }: {
     collectorInteraction: ButtonInteraction;
-    groupMessageActionRow: ActionRowBuilder<ButtonBuilder>;
+    sessionMessageActionRow: ActionRowBuilder<ButtonBuilder>;
     sessionMembers: SessionParticipantEntity[];
   },
 ): ActionRowBuilder<ButtonBuilder> => {
   const updatedButtonRow = new ActionRowBuilder<ButtonBuilder>();
-  groupMessageActionRow.components.forEach((_button, i) => {
+  sessionMessageActionRow.components.forEach((_button, i) => {
     const customId = collectorInteraction.customId.replace(/\d$/, `${i}`);
     const label = sessionMembers.at(i)?.username;
     const style = label ? ButtonStyle.Success : ButtonStyle.Primary;
     const isDisabled = !!label;
 
-    if (i < groupMessageActionRow.components.length - 1) {
+    if (i < sessionMessageActionRow.components.length - 1) {
       updatedButtonRow.addComponents(
         new ButtonBuilder()
           .setCustomId(customId)
@@ -38,7 +38,7 @@ const getUpdatedButtonRow = (
     } else {
       updatedButtonRow.addComponents(
         new ButtonBuilder()
-          .setCustomId("group-spot-leave")
+          .setCustomId("session-spot-leave")
           .setLabel("Sair")
           .setStyle(ButtonStyle.Danger),
       );
@@ -48,10 +48,10 @@ const getUpdatedButtonRow = (
   return updatedButtonRow;
 };
 
-const handleGroupSpotLeaveButtonInteraction = async (
+const handleSessionSpotLeaveButtonInteraction = async (
   input: {
     collectorInteraction: ButtonInteraction;
-    groupMessageActionRow: ActionRowBuilder<ButtonBuilder>;
+    sessionMessageActionRow: ActionRowBuilder<ButtonBuilder>;
     session: SessionEntity;
   },
 ) => {
@@ -70,7 +70,7 @@ const handleGroupSpotLeaveButtonInteraction = async (
     )
   ) {
     await collectorInteraction.followUp({
-      content: "Você não faz parte deste grupo.",
+      content: "Você não faz parte desta sessão.",
       flags: "Ephemeral",
     });
     return;
@@ -105,13 +105,13 @@ const handleGroupSpotLeaveButtonInteraction = async (
 const collectListener = async (input: {
   collectorInteraction: ButtonInteraction;
   commandInteraction: CommandInteraction;
-  groupMessageActionRow: ActionRowBuilder<ButtonBuilder>;
+  sessionMessageActionRow: ActionRowBuilder<ButtonBuilder>;
   sessionId: string;
 }): Promise<void> => {
   const {
     commandInteraction,
     collectorInteraction,
-    groupMessageActionRow,
+    sessionMessageActionRow,
   } = input;
 
   const [formingSessions, ownerSessions] = await Promise.all([
@@ -131,17 +131,17 @@ const collectListener = async (input: {
 
   if (!session) {
     await collectorInteraction.followUp({
-      content: "Este grupo não está mais aceitando participantes.",
+      content: "Esta sessão não está mais aceitando participantes.",
       flags: "Ephemeral",
     });
     return;
   }
 
-  if (collectorInteraction.customId === "group-spot-leave") {
-    return handleGroupSpotLeaveButtonInteraction({
+  if (collectorInteraction.customId === "session-spot-leave") {
+    return handleSessionSpotLeaveButtonInteraction({
       collectorInteraction,
       session,
-      groupMessageActionRow,
+      sessionMessageActionRow,
     });
   }
 
@@ -155,7 +155,7 @@ const collectListener = async (input: {
     )
   ) {
     await collectorInteraction.followUp({
-      content: "Você já faz parte deste grupo.",
+      content: "Você já faz parte desta sessão.",
       flags: "Ephemeral",
     });
     return;
@@ -163,7 +163,7 @@ const collectListener = async (input: {
 
   if (sessionParticipants.length >= 4) {
     await collectorInteraction.followUp({
-      content: "Este grupo já está cheio",
+      content: "Esta sessão já está cheia",
       flags: "Ephemeral",
     });
     return;
@@ -184,7 +184,7 @@ const collectListener = async (input: {
 
   const updatedButtonRow = getUpdatedButtonRow({
     sessionMembers,
-    groupMessageActionRow,
+    sessionMessageActionRow: sessionMessageActionRow,
     collectorInteraction,
   });
 
@@ -193,17 +193,17 @@ const collectListener = async (input: {
 
 const endListener = async (input: {
   commandInteraction: CommandInteraction;
-  groupMessage: Message;
-  groupMessageActionRow: ActionRowBuilder<ButtonBuilder>;
+  sessionMessage: Message;
+  sessionMessageActionRow: ActionRowBuilder<ButtonBuilder>;
 }): Promise<void> => {
-  const { commandInteraction, groupMessage, groupMessageActionRow } = input;
+  const { commandInteraction, sessionMessage, sessionMessageActionRow } = input;
 
-  const disabledButtons = groupMessageActionRow.components.map((button) =>
+  const disabledButtons = sessionMessageActionRow.components.map((button) =>
     button.setDisabled(true)
   );
 
   await commandInteraction.editReply({
-    content: groupMessage.content +
+    content: sessionMessage.content +
       "\n\n**O período para formação e início de sessão expirou.**",
     components: [
       new ActionRowBuilder<ButtonBuilder>().setComponents(disabledButtons),
