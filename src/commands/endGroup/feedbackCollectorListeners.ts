@@ -14,33 +14,33 @@ import { Colors } from "discord.js";
 import { oneHourMs } from "../../lib/constants.ts";
 import { tryDm } from "../../lib/sendDm.ts";
 
-export const collectListener = async (
+export const feedbackCollectListener = async (
   collectorInteraction: ButtonInteraction,
   allParticipants: SessionParticipantEntity[],
   sessionId: string,
   feedbackGiverId: string,
-  fallbackChannel: TextChannel,
+  sessionChannel: TextChannel,
 ) => {
   const feedbackReceivers = allParticipants.filter(
     (p) => p.participantId !== feedbackGiverId,
   );
+  const sessionName = sessionChannel.name.replace("-chat", " ");
 
   const modal = new ModalBuilder()
     .setCustomId(`feedback_modal_submit_${sessionId}_${feedbackGiverId}`)
-    .setTitle("Feedback da sessão");
-
-  feedbackReceivers.forEach((receiver) => {
-    const textInput = new TextInputBuilder()
-      .setCustomId(`feedback_input_${receiver.participantId}`)
-      .setLabel(`Feedback para ${receiver.username}`)
-      .setStyle(TextInputStyle.Paragraph)
-      .setRequired(true)
-      .setPlaceholder("Escreva seu feedback aqui.");
-
-    modal.addComponents(
-      new ActionRowBuilder<TextInputBuilder>().addComponents(textInput),
-    );
-  });
+    .setTitle(`Feedback de "${sessionName}"`)
+    .addComponents(
+      new ActionRowBuilder<TextInputBuilder>().addComponents(
+        feedbackReceivers.map((receiver) =>
+          new TextInputBuilder()
+            .setCustomId(`feedback_input_${receiver.participantId}`)
+            .setLabel(`Feedback para ${receiver.username}`)
+            .setStyle(TextInputStyle.Paragraph)
+            .setRequired(true)
+            .setPlaceholder("Escreva seu feedback aqui.")
+        ),
+      ),
+    ).toJSON();
 
   await collectorInteraction.showModal(modal);
 
@@ -49,16 +49,18 @@ export const collectListener = async (
   });
   await modalInteraction.deferReply({ flags: "Ephemeral" });
 
-  for (const actionRow of modalInteraction.components) {
-    for (const component of actionRow.components) {
-      if (component.customId.startsWith("feedback_input_")) {
-        const feedbackReceiverId = component.customId.replace(
-          "feedback_input_",
-          "",
-        );
-        const feedbackText = component.value.trim();
+  await Promise.all(
+    modalInteraction.components.flatMap((actionRow) =>
+      actionRow.components.map(async (component) => {
+        if (component.customId.startsWith("feedback_input_")) {
+          const feedbackReceiverId = component.customId.replace(
+            "feedback_input_",
+            "",
+          );
 
-        if (feedbackText) {
+          const feedbackText = component.value.trim();
+          if (!feedbackText) return;
+
           const receiverUser = await collectorInteraction.client.users.fetch(
             feedbackReceiverId,
           );
@@ -72,23 +74,20 @@ export const collectListener = async (
                 feedbackText,
               }),
               tryDm(receiverUser, {
-                content:
-                  "Você recebeu um feedback de uma sessão na qual você participou recentemente!",
+                content: `Você recebeu um feedback da sessão "${sessionName}"!`,
                 embeds: [
                   new EmbedBuilder()
                     .setColor(Colors.Aqua)
                     .setDescription(feedbackText)
                     .toJSON(),
                 ],
-              }, fallbackChannel),
+              }, sessionChannel),
             ],
           );
         }
-      }
-    }
-  }
+      })
+    ),
+  );
 
-  await modalInteraction.editReply({
-    content: "Obrigado! Seu feedback foi registrado.",
-  });
+  await modalInteraction.deleteReply();
 };
