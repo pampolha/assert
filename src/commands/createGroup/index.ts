@@ -153,13 +153,20 @@ const command: BotCommand = {
           componentType: ComponentType.Button,
           time: oneHourMs,
         });
-      } catch {
-        await endListener({
-          groupMessage,
-          groupMessageActionRow,
-          commandInteraction: interaction,
-        });
-        return;
+      } catch (err) {
+        if (err instanceof Error) {
+          if (err.message.includes("messageDelete")) {
+            return;
+          }
+
+          await endListener({
+            groupMessage,
+            groupMessageActionRow,
+            commandInteraction: interaction,
+          });
+          return;
+        }
+        throw err;
       }
 
       await collectorInteraction.deferUpdate();

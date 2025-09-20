@@ -16,6 +16,7 @@ import {
   createVoiceChannel,
 } from "./channelCreation.ts";
 import { tryDm } from "../../lib/sendDm.ts";
+import { inspectError } from "../../lib/log.ts";
 
 export const collectListener = async (
   commandInteraction: CommandInteraction<"cached">,
@@ -24,20 +25,19 @@ export const collectListener = async (
   participants: SessionParticipantEntity[],
 ) => {
   if (collectorInteraction.customId === "confirm_start_session") {
-    const userGroupMessages = commandInteraction.channel?.messages.cache.filter(
-      (msg) =>
-        msg.author === commandInteraction.client.user &&
-        msg.mentions.users.has(collectorInteraction.user.id),
-    );
+    const userGroupMessage =
+      (await commandInteraction.channel?.messages.fetch())?.find(
+        (msg) =>
+          msg.author === commandInteraction.client.user &&
+          msg.mentions.users.has(collectorInteraction.user.id),
+      );
 
     await Promise.all([
       collectorInteraction.editReply({
-        content: "Gerando cenário e criando canais...",
+        content: "Preparando a sessão...",
         components: [],
       }),
-      userGroupMessages?.map((msg) =>
-        msg.edit({ content: `*Grupo iniciado*`, components: [] })
-      ),
+      userGroupMessage?.delete().catch(inspectError),
     ]);
 
     const scenario = await ScenarioModel.get({
@@ -45,15 +45,10 @@ export const collectListener = async (
     });
 
     if (!scenario) {
-      await commandInteraction.editReply({
-        content: "Cenário não encontrado.",
-      });
-      return;
+      throw new Error("No scenario was found!");
     }
 
-    const scenarioTitle = scenario.corporate.company_name ??
-      "Cenário de Simulação";
-
+    const scenarioTitle = scenario.corporate.company_name;
     const baseChannelName = `sessao-${commandInteraction.user.username}`
       .toLowerCase()
       .replace(/\s+/g, "-")
@@ -121,12 +116,12 @@ export const collectListener = async (
       }),
       commandInteraction.editReply({
         content:
-          `Sua sessão de simulação foi iniciada! Você pode encontrar seus canais aqui: ${textChannel} (texto) e ${voiceChannel} (voz).`,
+          `Sua sessão foi iniciada! Você pode encontrar seus canais aqui: ${textChannel} (texto) e ${voiceChannel} (voz).`,
       }),
     ]);
   } else if (collectorInteraction.customId === "cancel_start_session") {
     await collectorInteraction.editReply({
-      content: "Operação de início de sessão cancelada.",
+      content: "Início de sessão cancelado.",
       components: [],
     });
   }
