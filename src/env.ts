@@ -9,12 +9,10 @@ const getOrThrow = (key: string): string => {
 const botToken = getOrThrow("BOT_TOKEN");
 const botClientId = getOrThrow("BOT_CLIENT_ID");
 const openrouterKey = getOrThrow("OPENROUTER_API_KEY");
-const debugGuildId = getOrThrow("DEBUG_GUILD_ID");
 const mainChannelId = getOrThrow("MAIN_CHANNEL_ID");
 const awsAccessKeyId = getOrThrow("AWS_ACCESS_KEY_ID");
 const awsSecretAccessKey = getOrThrow("AWS_SECRET_ACCESS_KEY");
 const awsRegion = getOrThrow("AWS_REGION");
-const myUserId = getOrThrow("MY_USER_ID");
 
 export {
   awsAccessKeyId,
@@ -22,8 +20,6 @@ export {
   awsSecretAccessKey,
   botClientId,
   botToken,
-  debugGuildId,
   mainChannelId,
-  myUserId,
   openrouterKey,
 };
