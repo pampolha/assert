@@ -6,11 +6,12 @@ deno check
 deno lint
 deno task build
 
+TFVARS_PATH=.tfvars
 PLAN_PATH=.terraform.plan
 terraform init
 terraform validate
-terraform plan --out=$PLAN_PATH
-terraform apply $PLAN_PATH
+terraform plan --var-file=$TFVARS_PATH --out=$PLAN_PATH
+terraform apply --var-file=$TFVARS_PATH $PLAN_PATH
 
 IP=$(terraform output --raw instance_public_ip)
 
