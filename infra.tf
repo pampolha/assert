@@ -19,6 +19,11 @@ provider "aws" {
   region = "us-east-2"
 }
 
+variable "allowed_cidr" {
+  type      = string
+  sensitive = true
+}
+
 resource "aws_dynamodb_table" "single_table" {
   name         = "assert-table"
   billing_mode = "PAY_PER_REQUEST"
@@ -78,7 +83,7 @@ resource "aws_security_group" "assert_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.allowed_cidr]
   }
 
   egress {
