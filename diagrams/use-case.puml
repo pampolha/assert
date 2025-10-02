@@ -1,0 +1,89 @@
+@startuml assert-use-case
+title Diagrama de Caso de Uso
+skinparam actorStyle awesome 
+left to right direction
+!theme mars
+
+package "OpenRouter" as openrouter{
+  boundary "Modelo de Inteligência Artificial" as llm
+}
+
+package "AWS" as aws {
+  database "Tabela DynamoDB" as table 
+
+  rectangle "Instância EC2" as ec2 {
+    usecase "Gerar cenário" as generateScenario
+    usecase "Gerar resposta do personagem" as generateResponse
+    usecase "Gerar feedback da sessão" as generateFeedback
+
+    note top of generateScenario : A cada 24 horas, um novo cenário é gerado
+
+    llm .. generateScenario
+    generateScenario .. table
+
+    llm .. generateResponse
+
+    llm .. generateFeedback
+    generateFeedback .. table
+  }
+}
+
+package "Discord" as discord {
+  actor "Bot Assert" as bot
+  actor "Usuário" as user
+  actor "Dono da sessão" as owner
+
+  user <|- owner
+
+  usecase "Criar sessão" as createSession
+  usecase "Ajuda" as help
+  note right of help: O comando de ajuda disponibiliza instruções para o uso do bot
+
+  user -- help
+  user -- createSession
+  createSession --> owner
+
+  rectangle "Sessão em formação" as sessionFormation {
+    usecase "Juntar-se a sessão em formação" as joinSession
+    usecase "Deixar a sessão em formação" as leaveSession
+    usecase "Encerrar sessão em formação" as endSessionFormation
+    usecase "Iniciar sessão" as startSession
+  }
+
+  user -- joinSession
+  user -- leaveSession
+
+  owner -- startSession
+  owner -- endSessionFormation
+
+  rectangle "Sessão em andamento" as activeSession {
+    usecase "Criar canais de comunicação da sessão" as createChannels
+    usecase "Enviar informações do cenário" as sendInfo
+    usecase "Interagir com personagens do cenário" as mentionNpc
+    usecase "Encerrar sessão" as endSession
+  }
+
+  bot -- createChannels
+  bot -- sendInfo
+
+  user -- mentionNpc
+  owner -- endSession
+
+  rectangle "Sessão em encerramento" as sessionEnd {
+    usecase "Deletar canais de comunicação da sessão" as deleteChannels
+    note top of deleteChannels : Os canais são deletados em uma hora após o encerramento da sessão 
+    usecase "Enviar formulários de feedback para os usuários da sessão" as sendForms
+    usecase "Escrever feedback para os outros usuários na sessão" as writeFeedback
+  }
+
+  bot .. deleteChannels
+  
+  bot -- sendForms
+  sendForms ..> writeFeedback: <<extends>>
+  user -- writeFeedback
+  
+}
+
+mentionNpc .. generateResponse
+
+@enduml
