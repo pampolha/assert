@@ -17,6 +17,7 @@ intensos, focado em desenvolver habilidades de comunicação assertiva.
   - [Deploy em Produção](#deploy-em-produção)
 - [Estrutura do Projeto](#estrutura-do-projeto)
 - [Desenvolvimento](#desenvolvimento)
+- [Diagramas] (#diagramas)
 - [Licença](#licença)
 
 ## Visão Geral
@@ -167,6 +168,94 @@ OpenRouter. A lógica de geração está em `src/lib/generateScenario.ts`.
 Os modelos de dados são definidos usando DynamoDB OneTable em
 `src/table/models.ts`. A configuração do Terraform para a tabela está em
 `infra.tf`.
+
+## Diagramas
+
+Os diagramas são definidos como código utilizando
+[mermaid](https://mermaid.js.org/).
+
+### Diagrama de Caso de Uso
+
+```mermaid
+---
+config:
+  look: handDrawn
+  layout: elk
+  elk:
+    nodePlacementStrategy: LINEAR_SEGMENTS
+---
+flowchart LR
+    user["fa:fa-user Usuário"]
+    owner["fa:fa-user-tie Dono da sessão"]
+    bot["fa:fa-robot Bot Assert"]
+    aiModel["fa:fa-brain Modelo de IA"]
+
+    owner --> user
+
+    subgraph "Assert"
+        direction TB
+        
+        createSession(["`Criar sessão<br><small>Sessões em formação expiram em 1 hora</small>`"])
+        help(["`Ajuda<br><small>O comando de ajuda disponibiliza instruções para o uso do bot</small>`"])
+        joinSession(["Juntar-se a sessão em formação"])
+        leaveSession(["`Deixar a sessão em formação<br><small>O dono da sessão não pode sair</small>`"])
+        endSessionFormation(["`Encerrar sessão em formação<br><small>Comando: /encerrar-sessao</small>`"])
+        startSession(["Iniciar sessão"])
+        mentionNpc(["Interagir com personagens do cenário"])
+        endSession(["`Encerrar sessão ativa<br><small>Comando: /encerrar-sessao</small>`"])
+        writeFeedback(["`Enviar feedback aos participantes<br><small>Usuário preenche formulário recebido por DM</small>`"])
+
+        generateScenario(["`Gerar cenário<br><small>A cada 24 horas, um novo cenário é gerado</small>`"])
+        generateReview(["Gerar revisão geral da sessão"])
+        generateResponse(["Gerar resposta do personagem"])
+        createChannels(["Criação dos canais de comunicação da sessão"])
+        sendInfo(["Enviar informações do cenário para os participantes"])
+        sendForms(["Recebimento de formulário para feedback de participantes da sessão"])
+        deleteChannels(["`Deleção dos canais de comunicação da sessão<br><small>Os canais são deletados em uma hora após o encerramento da sessão</small>`"])
+
+        persistDb(["Registrar no banco de dados"])
+        table[("Tabela DynamoDB")]
+    end
+
+    user --> createSession
+    user --> help
+    user --> joinSession
+    user --> leaveSession
+    user --> mentionNpc
+    user --> writeFeedback
+
+    owner --> endSessionFormation
+    owner --> startSession
+    owner --> endSession
+
+    bot --> generateScenario
+
+    generateScenario --> aiModel
+    generateReview --> aiModel
+    generateResponse --> aiModel
+
+    persistDb --> table
+    
+    createSession       -.->|include| persistDb
+    joinSession         -.->|include| persistDb
+    leaveSession        -.->|include| persistDb
+    endSessionFormation -.->|include| persistDb
+    startSession        -.->|include| persistDb
+    writeFeedback       -.->|include| persistDb
+    generateScenario    -.->|include| persistDb
+    generateReview      -.->|include| persistDb
+    createChannels      -.->|include| persistDb
+    endSession          -.->|include| persistDb
+
+    startSession -.->|include| createChannels
+    startSession -.->|include| sendInfo
+    
+    mentionNpc -.->|include| generateResponse
+    
+    endSession -.->|include| sendForms
+    endSession -.->|include| generateReview
+    endSession -.->|include| deleteChannels
+```
 
 ## Licença
 
