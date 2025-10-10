@@ -17,7 +17,7 @@ intensos, focado em desenvolver habilidades de comunicação assertiva.
   - [Deploy em Produção](#deploy-em-produção)
 - [Estrutura do Projeto](#estrutura-do-projeto)
 - [Desenvolvimento](#desenvolvimento)
-- [Diagramas] (#diagramas)
+- [Diagramas](#diagramas)
 - [Licença](#licença)
 
 ## Visão Geral
