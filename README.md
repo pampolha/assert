@@ -257,6 +257,242 @@ flowchart LR
     endSession -.->|include| deleteChannels
 ```
 
+### Diagrama de Classes
+
+```mermaid
+---
+config:
+  class:
+    hideEmptyMembersBox: true
+---
+classDiagram
+
+class DiscordClient {
+    +Collection~BotCommand~ commands
+    +Collection~string,ScenarioEntity~ scenarioCache
+    +login(token)
+    +on(event, listener)
+    +once(event, listener)
+}
+
+class BotCommand {
+    <<Interface>>
+    +data: SlashCommandBuilder
+    +execute(interaction) void
+}
+
+class CreateSessionCommand {
+    +data
+    +execute(interaction)
+}
+
+class StartSessionCommand {
+    +data
+    +execute(interaction)
+}
+
+class EndSessionCommand {
+    +data
+    +execute(interaction)
+}
+
+class HelpCommand {
+    +data
+    +execute(interaction)
+}
+
+BotCommand <|.. CreateSessionCommand
+BotCommand <|.. StartSessionCommand
+BotCommand <|.. EndSessionCommand
+BotCommand <|.. HelpCommand
+
+DiscordClient "1" *-- "0..*" BotCommand : contains
+
+namespace Models {
+    class SessionModel {
+        +create(entity)
+        +find(query)
+        +get(query)
+        +update(entity)
+        +remove(query)
+    }
+    class SessionParticipantModel {
+        +create(entity)
+        +find(query)
+        +get(query)
+        +remove(query)
+    }
+    class SessionChannelModel {
+        +create(entity)
+        +find(query)
+        +get(query)
+    }
+    class SessionFeedbackModel {
+        +create(entity)
+        +find(query)
+    }
+    class SessionReviewModel {
+        +create(entity)
+    }
+    class ScenarioModel {
+        +create(entity)
+        +find(query)
+        +get(query)
+    }
+}
+
+namespace Entities {
+    class SessionEntity {
+        +sessionId: string
+        +scenarioId: string
+        +status: string
+        +expiryDate: number
+    }
+    class SessionParticipantEntity {
+        +sessionId: string
+        +participantId: string
+        +username: string
+        +role: string
+    }
+    class SessionChannelEntity {
+        +sessionId: string
+        +channelId: string
+        +type: string
+    }
+    class SessionFeedbackEntity {
+        +sessionId: string
+        +feedbackGiverId: string
+        +feedbackReceiverId: string
+        +feedbackText: string
+    }
+    class SessionReviewEntity {
+        +sessionId: string
+        +overallEvaluation: string
+    }
+    class ScenarioEntity {
+        +scenarioId: string
+        +corporate: object
+        +challenge: string
+        +characters: object[]
+        +npcs: object[]
+        +objective: string
+    }
+}
+
+namespace Schemas {
+    class scenarioSchema {
+        <<Zod Schema>>
+    }
+    class reviewSchema {
+        <<Zod Schema>>
+    }
+}
+
+Models.SessionModel ..> Entities.SessionEntity : manages
+Models.SessionParticipantModel ..> Entities.SessionParticipantEntity : manages
+Models.SessionChannelModel ..> Entities.SessionChannelEntity : manages
+Models.SessionFeedbackModel ..> Entities.SessionFeedbackEntity : manages
+Models.SessionReviewModel ..> Entities.SessionReviewEntity : manages
+Models.ScenarioModel ..> Entities.ScenarioEntity : manages
+
+Entities.SessionEntity "1" -- "1..*" Entities.SessionParticipantEntity : contains
+Entities.SessionEntity "1" -- "1..*" Entities.SessionChannelEntity : contains
+Entities.SessionEntity "1" -- "0..*" Entities.SessionFeedbackEntity : can contain
+Entities.SessionEntity "1" -- "0..1" Entities.SessionReviewEntity : can contain
+Entities.SessionEntity "1" -- "1" Entities.ScenarioEntity : references
+
+CreateSessionCommand ..> Models.SessionModel
+CreateSessionCommand ..> Models.SessionParticipantModel
+CreateSessionCommand ..> Models.ScenarioModel
+
+StartSessionCommand ..> Models.SessionModel
+StartSessionCommand ..> Models.SessionParticipantModel
+StartSessionCommand ..> Models.ScenarioModel
+StartSessionCommand ..> Models.SessionChannelModel
+StartSessionCommand ..> Utils.ChannelCreation
+StartSessionCommand ..> Utils.OnboardingTemplates
+StartSessionCommand ..> Utils.SendDm
+
+EndSessionCommand ..> Models.SessionModel
+EndSessionCommand ..> Models.SessionParticipantModel
+EndSessionCommand ..> Models.SessionChannelModel
+EndSessionCommand ..> Utils.SendFeedbackForms
+EndSessionCommand ..> Utils.SendReview
+
+namespace Services {
+    class OpenAI {
+        +chat.completions.create()
+    }
+    class GenerateNpcResponse {
+        <<Service>>
+        +generateNpcResponse(message)
+    }
+    class GenerateScenario {
+        <<Service>>
+        +generateScenario()
+    }
+    class GenerateReview {
+        <<Service>>
+        +generateReview(history, scenario, sessionId)
+    }
+    class LoadCommands {
+        <<Service>>
+        +loadCommands(path)
+    }
+}
+
+namespace Utils {
+    class ChannelCreation {
+        <<Utility>>
+        +createCategory(interaction, participantIds)
+        +createTextChannel(input)
+        +createVoiceChannel(input)
+    }
+    class OnboardingTemplates {
+        <<Utility>>
+        +makeWelcomeMessageArray(scenario, participants)
+        +makeDmInstructions(owner, character)
+    }
+    class SendFeedbackForms {
+        <<Utility>>
+        +sendFeedbackForms(session, participants, channel)
+    }
+    class SendReview {
+        <<Utility>>
+        +sendReview(session, channel)
+    }
+    class SendDm {
+        <<Utility>>
+        +tryDm(user, content, fallbackChannel)
+    }
+}
+
+DiscordClient ..> Services.LoadCommands : uses
+DiscordClient ..> Services.GenerateScenario : uses
+DiscordClient ..> Services.GenerateNpcResponse : uses
+
+Services.GenerateNpcResponse ..> Models.SessionChannelModel
+Services.GenerateNpcResponse ..> Models.SessionModel
+Services.GenerateNpcResponse ..> Models.ScenarioModel
+Services.GenerateNpcResponse ..> Services.OpenAI
+
+Services.GenerateScenario ..> Models.ScenarioModel
+Services.GenerateScenario ..> Services.OpenAI
+Services.GenerateScenario ..> Schemas.scenarioSchema
+
+Services.GenerateReview ..> Models.SessionReviewModel
+Services.GenerateReview ..> Models.SessionFeedbackModel
+Services.GenerateReview ..> Services.OpenAI
+Services.GenerateReview ..> Schemas.reviewSchema
+
+Utils.SendFeedbackForms ..> Utils.SendDm
+Utils.SendFeedbackForms ..> Models.SessionFeedbackModel
+
+Utils.SendReview ..> Services.GenerateReview
+Utils.SendReview ..> Utils.SendDm
+Utils.SendReview ..> Models.ScenarioModel
+```
+
 ## Licença
 
 Este projeto está sob a licença CC-BY-NC-ND-4.0. Veja o arquivo LICENSE.md para
