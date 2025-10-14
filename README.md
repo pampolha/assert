@@ -207,7 +207,7 @@ flowchart LR
 
         generateScenario(["`Gerar cenário<br><small>A cada 24 horas, um novo cenário é gerado</small>`"])
         generateReview(["Gerar revisão geral da sessão"])
-        generateResponse(["Gerar resposta do personagem"])
+        handleNpcInteraction(["Gerar resposta do personagem"])
         createChannels(["Criação dos canais de comunicação da sessão"])
         sendInfo(["Enviar informações do cenário para os participantes"])
         sendForms(["Recebimento de formulário para feedback de participantes da sessão"])
@@ -232,7 +232,7 @@ flowchart LR
 
     generateScenario --> aiModel
     generateReview --> aiModel
-    generateResponse --> aiModel
+    handleNpcInteraction --> aiModel
 
     persistDb --> table
     
@@ -246,11 +246,12 @@ flowchart LR
     generateReview      -.->|include| persistDb
     createChannels      -.->|include| persistDb
     endSession          -.->|include| persistDb
+    mentionNpc          -.->|include| persistDb
 
     startSession -.->|include| createChannels
     startSession -.->|include| sendInfo
     
-    mentionNpc -.->|include| generateResponse
+    mentionNpc -.->|include| handleNpcInteraction
     
     endSession -.->|include| sendForms
     endSession -.->|include| generateReview
@@ -334,6 +335,9 @@ namespace Models {
     class SessionReviewModel {
         +create(entity)
     }
+    class SessionInteractionModel {
+        +create(entity)
+    }
     class ScenarioModel {
         +create(entity)
         +find(query)
@@ -369,6 +373,12 @@ namespace Entities {
         +sessionId: string
         +overallEvaluation: string
     }
+    class SessionInteractionEntity {
+        +sessionId: string
+        +triggerMessage: string
+        +participantId: string
+        +generatedResponse: string
+    }
     class ScenarioEntity {
         +scenarioId: string
         +corporate: object
@@ -393,12 +403,14 @@ Models.SessionParticipantModel ..> Entities.SessionParticipantEntity : manages
 Models.SessionChannelModel ..> Entities.SessionChannelEntity : manages
 Models.SessionFeedbackModel ..> Entities.SessionFeedbackEntity : manages
 Models.SessionReviewModel ..> Entities.SessionReviewEntity : manages
+Models.SessionInteractionModel ..> Entities.SessionInteractionEntity : manages
 Models.ScenarioModel ..> Entities.ScenarioEntity : manages
 
 Entities.SessionEntity "1" -- "1..*" Entities.SessionParticipantEntity : contains
 Entities.SessionEntity "1" -- "1..*" Entities.SessionChannelEntity : contains
 Entities.SessionEntity "1" -- "0..*" Entities.SessionFeedbackEntity : can contain
 Entities.SessionEntity "1" -- "0..1" Entities.SessionReviewEntity : can contain
+Entities.SessionEntity "1" -- "0..*" Entities.SessionInteractionEntity : can contain
 Entities.SessionEntity "1" -- "1" Entities.ScenarioEntity : references
 
 CreateSessionCommand ..> Models.SessionModel
@@ -423,9 +435,9 @@ namespace Services {
     class OpenAI {
         +chat.completions.create()
     }
-    class GenerateNpcResponse {
+    class NpcInteractionHandler {
         <<Service>>
-        +generateNpcResponse(message)
+        +npcInteractionHandler(message)
     }
     class GenerateScenario {
         <<Service>>
@@ -469,12 +481,13 @@ namespace Utils {
 
 DiscordClient ..> Services.LoadCommands : uses
 DiscordClient ..> Services.GenerateScenario : uses
-DiscordClient ..> Services.GenerateNpcResponse : uses
+DiscordClient ..> Services.NpcInteractionHandler : uses
 
-Services.GenerateNpcResponse ..> Models.SessionChannelModel
-Services.GenerateNpcResponse ..> Models.SessionModel
-Services.GenerateNpcResponse ..> Models.ScenarioModel
-Services.GenerateNpcResponse ..> Services.OpenAI
+Services.NpcInteractionHandler ..> Models.SessionChannelModel
+Services.NpcInteractionHandler ..> Models.SessionModel
+Services.NpcInteractionHandler ..> Models.ScenarioModel
+Services.NpcInteractionHandler ..> Models.SessionInteractionModel
+Services.NpcInteractionHandler ..> Services.OpenAI
 
 Services.GenerateScenario ..> Models.ScenarioModel
 Services.GenerateScenario ..> Services.OpenAI
