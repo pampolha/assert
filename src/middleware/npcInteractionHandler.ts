@@ -3,6 +3,7 @@ import {
   type ScenarioEntity,
   ScenarioModel,
   SessionChannelModel,
+  SessionInteractionModel,
   SessionModel,
 } from "../table/models.ts";
 import { OpenAI } from "openai";
@@ -99,6 +100,22 @@ const generateNpcResponse = async (
   return npcResponse;
 };
 
+const registerInteraction = (
+  sessionId: string,
+  message: ValidNpcInteractionMessage,
+  generatedResponse: string,
+) => {
+  const triggerMessage = message.content;
+  const participantId = message.author.id;
+
+  return SessionInteractionModel.create({
+    sessionId,
+    triggerMessage,
+    participantId,
+    generatedResponse,
+  });
+};
+
 const sendViaWebhook = async (
   channel: TextChannel,
   npcName: string,
@@ -136,7 +153,10 @@ export const npcInteractionHandler = async (
       formattedHistory,
     );
 
-    await sendViaWebhook(channel, triggeredNpc.name, npcResponse);
+    await Promise.all([
+      sendViaWebhook(channel, triggeredNpc.name, npcResponse),
+      registerInteraction(channel.id, message, npcResponse),
+    ]);
   } catch (error) {
     inspectError(error);
     await message.channel.send(
