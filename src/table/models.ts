@@ -94,6 +94,18 @@ const schema = {
       created: { type: Date, timestamp: true },
       updated: { type: Date, timestamp: true },
     },
+    SessionInteraction: {
+      sessionId: { type: String, required: true },
+      triggerMessage: { type: String, required: true },
+      participantId: { type: String, required: true },
+      generatedResponse: { type: String, required: true },
+      PK: { type: String, value: "SESSION#${sessionId}" },
+      SK: { type: String, value: "INTERACTION" },
+      GS1PK: { type: String, value: "INTERACTION" },
+      GS1SK: { type: String, value: "SESSION#${sessionId}" },
+      created: { type: Date, timestamp: true },
+      updated: { type: Date, timestamp: true },
+    },
     Scenario: {
       scenarioId: { type: String, required: true },
       corporate: {
@@ -164,6 +176,7 @@ export type SessionFeedbackEntity = Entity<
   typeof schema.models.SessionFeedback
 >;
 export type SessionReviewEntity = Entity<typeof schema.models.SessionReview>;
+export type SessionInteractionEntity = Entity<typeof schema.models.SessionInteraction>;
 
 export const SessionModel = table.getModel("Session");
 export const ScenarioModel = table.getModel("Scenario");
@@ -171,3 +184,4 @@ export const SessionParticipantModel = table.getModel("SessionParticipant");
 export const SessionChannelModel = table.getModel("SessionChannel");
 export const SessionFeedbackModel = table.getModel("SessionFeedback");
 export const SessionReviewModel = table.getModel("SessionReview");
+export const SessionInteractionModel = table.getModel("SessionInteraction");
