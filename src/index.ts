@@ -11,6 +11,7 @@ import { botToken, mainChannelId } from "./env.ts";
 import { npcInteractionHandler } from "./middleware/npcInteractionHandler.ts";
 import { ChannelType } from "discord.js";
 import type {
+  ClientOptions,
   CommandInteraction,
   Message,
   SlashCommandBuilder,
@@ -33,7 +34,18 @@ export interface BotCommand {
   execute: (interaction: CommandInteraction) => Promise<void>;
 }
 
-export const client: Client = new Client({
+export class AssertClient extends Client {
+  scenarioCache: Collection<string, ScenarioEntity>;
+  commands: Collection<string, BotCommand>;
+
+  constructor(options: ClientOptions) {
+    super(options);
+    this.scenarioCache = new Collection<string, ScenarioEntity>();
+    this.commands = new Collection<string, BotCommand>();
+  }
+}
+
+export const client: AssertClient = new AssertClient({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
@@ -47,10 +59,6 @@ export const client: Client = new Client({
     Partials.User,
   ],
 });
-
-client.scenarioCache = new Collection<string, ScenarioEntity>();
-
-client.commands = new Collection<string, BotCommand>();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
