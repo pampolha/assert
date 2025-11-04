@@ -3,7 +3,8 @@ source .env
 set -e -x
 
 deno check
-deno lint
+# no-slow-types breaks dynamodb-onetable type inference
+deno lint --rules-exclude=no-slow-types
 deno task build
 
 TFVARS_PATH=.tfvars
