@@ -6,7 +6,7 @@
   "tasks": {
     "start": "deno run --allow-all --env-file src/index.ts",
     "dev": "deno run --watch --allow-all --env-file src/index.ts",
-    "build": "deno compile --allow-env --env-file --allow-read --allow-net --include=src --target=x86_64-unknown-linux-gnu --output=bin/assert src/index.ts"
+    "build": "deno compile --allow-env --env-file --allow-read --allow-net --allow-sys --include=src --target=x86_64-unknown-linux-gnu --output=bin/assert src/index.ts"
   },
   "imports": {
     "@aws-sdk/client-dynamodb": "npm:@aws-sdk/client-dynamodb@^3.848.0",
