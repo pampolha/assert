@@ -21,11 +21,15 @@ terraform plan --var-file=$TFVARS_PATH --out=$PLAN_PATH
 terraform apply --var-file=$TFVARS_PATH $PLAN_PATH
 
 IP=$(terraform output --raw instance_public_ip)
+if ! ssh-keygen -F $IP; then
+  ssh-keyscan -H $IP >> ~/.ssh/known_hosts
+fi
+
 
 BIN_TMP_REMOTE_PATH=/tmp/assert
 CW_CONFIG_TMP_REMOTE_PATH=/tmp/config.json
 
-echo "put ./bin/assert $BIN_TMP_REMOTE_PATH" | sftp -i $SSH_KEY $SSH_LOGIN@$IP -y
+echo "put ./bin/assert $BIN_TMP_REMOTE_PATH" | sftp -i $SSH_KEY $SSH_LOGIN@$IP
 echo "put ./cw-agent-config.json $CW_CONFIG_TMP_REMOTE_PATH" | sftp -i $SSH_KEY $SSH_LOGIN@$IP
 
 BIN_REMOTE_PATH=/usr/local/bin/assert
