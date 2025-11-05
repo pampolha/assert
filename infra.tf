@@ -19,9 +19,8 @@ provider "aws" {
   region = "us-east-2"
 }
 
-variable "allowed_cidr" {
-  type      = string
-  sensitive = true
+data "http" "myip" {
+  url = "http://ipv4.icanhazip.com"
 }
 
 resource "aws_dynamodb_table" "single_table" {
@@ -83,7 +82,7 @@ resource "aws_security_group" "assert_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = [var.allowed_cidr]
+    cidr_blocks = ["${chomp(data.http.myip.response_body)}/32"]
   }
 
   egress {
