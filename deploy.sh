@@ -2,6 +2,12 @@
 source .env
 set -e -x
 
+test -f .env
+test -f .tfvars
+test -f ./bin/assert
+test -f ./cw-agent-config.json
+test -f "$SSH_KEY"
+
 deno check
 # no-slow-types breaks dynamodb-onetable type inference
 deno lint --rules-exclude=no-slow-types
