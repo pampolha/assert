@@ -25,7 +25,7 @@ IP=$(terraform output --raw instance_public_ip)
 BIN_TMP_REMOTE_PATH=/tmp/assert
 CW_CONFIG_TMP_REMOTE_PATH=/tmp/config.json
 
-echo "put ./bin/assert $BIN_TMP_REMOTE_PATH" | sftp -i $SSH_KEY $SSH_LOGIN@$IP
+echo "put ./bin/assert $BIN_TMP_REMOTE_PATH" | sftp -i $SSH_KEY $SSH_LOGIN@$IP -y
 echo "put ./cw-agent-config.json $CW_CONFIG_TMP_REMOTE_PATH" | sftp -i $SSH_KEY $SSH_LOGIN@$IP
 
 BIN_REMOTE_PATH=/usr/local/bin/assert
