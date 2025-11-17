@@ -103,7 +103,8 @@ client.on(Events.MessageCreate, (message) => {
     msg.inGuild() &&
     msg.channel.type === ChannelType.GuildText &&
     msg.channel.id !== mainChannelId &&
-    msg.content.includes("@");
+    msg.content.includes("@") &&
+    !(msg.author.bot || msg.webhookId);
 
   if (isValidMessage(message)) {
     npcInteractionHandler(message).catch(inspectError);
