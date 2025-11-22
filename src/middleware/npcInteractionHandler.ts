@@ -106,11 +106,13 @@ const registerInteraction = (
   generatedResponse: string,
 ) => {
   const triggerMessage = message.content;
+  const triggerMessageId = message.id;
   const participantId = message.author.id;
 
   return SessionInteractionModel.create({
     sessionId,
     triggerMessage,
+    triggerMessageId,
     participantId,
     generatedResponse,
   });

@@ -97,10 +97,11 @@ const schema = {
     SessionInteraction: {
       sessionId: { type: String, required: true },
       triggerMessage: { type: String, required: true },
+      triggerMessageId: { type: String, required: true },
       participantId: { type: String, required: true },
       generatedResponse: { type: String, required: true },
       PK: { type: String, value: "SESSION#${sessionId}" },
-      SK: { type: String, value: "INTERACTION" },
+      SK: { type: String, value: "INTERACTION#${triggerMessageId}" },
       GS1PK: { type: String, value: "INTERACTION" },
       GS1SK: { type: String, value: "SESSION#${sessionId}" },
       created: { type: Date, timestamp: true },
